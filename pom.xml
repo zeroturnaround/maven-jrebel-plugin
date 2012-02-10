@@ -21,9 +21,9 @@
   </properties>
 
   <scm>
-    <url>https://zeroturnaround.kilnhg.com/</url>
-    <connection>scm:hg:https://zeroturnaround.kilnhg.com/Repo/JRebel/Support/mvn-jr-plugin</connection>
-    <developerConnection>scm:hg:https://zeroturnaround.kilnhg.com/Repo/JRebel/Support/mvn-jr-plugin</developerConnection>
+    <url>https://github.com/zeroturnaround/maven-jrebel-plugin</url>
+    <connection>scm:git:git@github.com:zeroturnaround/maven-jrebel-plugin.git</connection>
+    <developerConnection>scm:git:git@github.com:zeroturnaround/maven-jrebel-plugin.git</developerConnection>
   </scm>
 
   <developers>
