@@ -8,6 +8,7 @@ Usage
 
 Add the following snippet to pom.xml of your maven project
 
+```xml
 <plugin>
   <groupId>org.zeroturnaround</groupId>
   <artifactId>jrebel-maven-plugin</artifactId>
@@ -21,6 +22,7 @@ Add the following snippet to pom.xml of your maven project
     </execution>
   </executions>
 </plugin>
+```
 
 To manually execute the goal, run 'mvn jrebel:generate' and rebel.xml will be generated to the tartget directory. 
 
