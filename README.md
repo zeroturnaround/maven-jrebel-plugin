@@ -24,7 +24,7 @@ Add the following snippet to pom.xml of your maven project
 </plugin>
 ```
 
-To manually execute the goal, run 'mvn jrebel:generate' and rebel.xml will be generated to the tartget directory. 
+To manually execute the goal, run 'mvn jrebel:generate' and rebel.xml will be generated to the target directory. 
 
 
 
