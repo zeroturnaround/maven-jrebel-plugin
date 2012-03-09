@@ -27,6 +27,7 @@ Add the following snippet to pom.xml of your maven project to generate rebel.xml
 To manually execute the goal, run 'mvn jrebel:generate' and rebel.xml will be generated to the target directory. 
 
 Add the following snippet to pom.xml of your maven project to generate liverebel.xml configuration
+
 ```xml
 <plugin>
   <groupId>org.zeroturnaround</groupId>
@@ -47,5 +48,6 @@ Add the following snippet to pom.xml of your maven project to generate liverebel
   </executions>
 </plugin>
 ```
+
 To manually execute the goal, run 'mvn jrebel:generate-liverebel-xml' and rebel.xml will be generated to the target directory. 
 
