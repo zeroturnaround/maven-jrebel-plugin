@@ -26,6 +26,9 @@ Add the following snippet to pom.xml of your maven project to generate rebel.xml
 
 To manually execute the goal, run 'mvn jrebel:generate' and rebel.xml will be generated to the target directory. 
 
+LiveRebel
+---------
+
 Add the following snippet to pom.xml of your maven project to generate liverebel.xml configuration
 
 ```xml
