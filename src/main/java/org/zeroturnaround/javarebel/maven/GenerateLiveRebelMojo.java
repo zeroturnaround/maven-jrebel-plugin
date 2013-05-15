@@ -11,11 +11,11 @@ import org.apache.maven.project.MavenProject;
 
 /**
  * Generate liverebel.xml.
- * 
+ *
  * @goal generate-liverebel-xml
  * @phase process-resources
  * @threadSafe true
- * 
+ *
  * @author Rein Raudjärv
  */
 public class GenerateLiveRebelMojo extends AbstractMojo {
@@ -23,31 +23,31 @@ public class GenerateLiveRebelMojo extends AbstractMojo {
   private static final String FILENAME = "liverebel.xml";
   private static final String LINE_SEPARATOR = System.getProperty("line.separator");
   /**
-   * If set rebel plugin will use provided value instead of project version as 
+   * If set rebel plugin will use provided value instead of project version as
    * application version.
-   * 
+   *
    * @parameter default-value="${project.version}"
    */
   private String version;
   /**
-   * If set rebel plugin will use provided value instead of project parameters as 
+   * If set rebel plugin will use provided value instead of project parameters as
    * application name.
-   * 
+   *
    * @parameter default-value="${project.groupId}:${project.artifactId}"
    */
   private String name;
   /**
    * The maven project.
-   * 
+   *
    * @parameter expression="${project}"
    * @required
    * @readonly
    */
   private MavenProject project;
   /**
-   * If set to true rebel plugin will generate liverebel.xml on each build, 
+   * If set to true rebel plugin will generate liverebel.xml on each build,
    * otherwise the timestamps of liverebel.xml and pom.xml are compared.
-   * 
+   *
    * @parameter default-value="false"
    */
   private boolean alwaysGenerate;
@@ -57,6 +57,14 @@ public class GenerateLiveRebelMojo extends AbstractMojo {
    * @readonly
    */
   private File workDirectory;
+
+  /**
+   * If set rebel plugin will prevent the generation of version tag at liverebel.xml
+   *
+   *
+   * @parameter default-value="false"
+   */
+  private boolean omitVersion;
 
   public void execute() throws MojoExecutionException, MojoFailureException {
     Log log = getLog();
@@ -78,7 +86,7 @@ public class GenerateLiveRebelMojo extends AbstractMojo {
     String xmlName = name != null ? name : project.getGroupId() + ":" + project.getArtifactId();
     String xmlVersion = version != null ? version : project.getVersion();
 
-    String contents = getLiveRebelXml(xmlName, xmlVersion);
+    String contents = getLiveRebelXml(xmlName, xmlVersion, omitVersion);
 
     if (log.isDebugEnabled())
       log.debug("Contents of generated " + FILENAME + ":" + LINE_SEPARATOR + contents);
@@ -91,7 +99,7 @@ public class GenerateLiveRebelMojo extends AbstractMojo {
     }
   }
 
-  private static String getLiveRebelXml(String app, String version) {
+  private static String getLiveRebelXml(String app, String version, boolean omitVersion) {
     if (app == null)
       throw new IllegalArgumentException("Application name is required");
     if (version == null)
@@ -100,7 +108,7 @@ public class GenerateLiveRebelMojo extends AbstractMojo {
     return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + LINE_SEPARATOR
         + "<application xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://www.zeroturnaround.com\" xsi:schemaLocation=\"http://www.zeroturnaround.com/alderaan/rebel-2_0.xsd\">" + LINE_SEPARATOR
         + "  <name>" + app + "</name>" + LINE_SEPARATOR
-        + "  <version>" + version + "</version>" + LINE_SEPARATOR
+        + ( omitVersion ? "" : "  <version>" + version + "</version>" + LINE_SEPARATOR)
         + "</application>";
   }
 }
