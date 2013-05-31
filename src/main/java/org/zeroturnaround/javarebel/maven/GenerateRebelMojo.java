@@ -157,8 +157,34 @@ public class GenerateRebelMojo extends AbstractMojo {
    * @parameter default-value="false"
    */
   private boolean alwaysGenerate;
+  
+  /**
+   * Indicates whether the default web element will be generated or not. Initial value is the same as {@link #generateDefaultElements} value.
+   */
+  private boolean generateDefaultWeb;
+
+  /**
+   * Indicates whether the default classpath element will be generated or not. Initial value is the same as {@link #generateDefaultElements} value.
+   */
+  private boolean generateDefaultClasspath;
+
+  /**
+   * If set to false rebel plugin will not generate default elements in rebel.xml.
+   * @parameter default-value="true"
+   */
+  private boolean generateDefaultElements;
 
   public void execute() throws MojoExecutionException, MojoFailureException {
+    // do not generate rebel.xml file if 'performRelease' system property is set to true
+    try {
+      if (Boolean.getBoolean("performRelease")) {
+        getLog().info("Skipped generating rebel.xml.");
+        return;
+      }
+    }
+    catch (SecurityException ignore) {}
+    
+    generateDefaultWeb = generateDefaultClasspath = generateDefaultElements;
     File rebelXmlFile = new File(rebelXmlDirectory, "rebel.xml").getAbsoluteFile();
     File pomXmlFile = getProject().getFile();
     if (!alwaysGenerate && rebelXmlFile.exists() && pomXmlFile.exists() && rebelXmlFile.lastModified() > pomXmlFile.lastModified()) {
@@ -172,6 +198,8 @@ public class GenerateRebelMojo extends AbstractMojo {
       builder = buildWar();
     } else if (JAR_PACKAGING.contains(packaging)) {
       builder = buildJar();
+    } else {
+      getLog().warn("Unsupported packaging type: " + packaging);
     }
 
     if (builder != null) {
@@ -237,6 +265,12 @@ public class GenerateRebelMojo extends AbstractMojo {
   private RebelXmlBuilder buildJar() throws MojoExecutionException {
     RebelXmlBuilder builder = new RebelXmlBuilder();
     buildClasspath(builder);
+    
+    // if user has specified any web elements, then let's generate these in the result file.
+    if (web != null && web.getResources() != null && web.getResources().length != 0) {
+      generateDefaultWeb = false; // but don't generate default web element because this folder is most likely missing.
+      buildWeb(builder);
+    }
 
     return builder;
   }
@@ -297,6 +331,9 @@ public class GenerateRebelMojo extends AbstractMojo {
   }
 
   private void buildDefaultClasspath(RebelXmlBuilder builder, RebelClasspathResource defaultClasspath) throws MojoExecutionException {
+    if (!generateDefaultClasspath) {
+      return;
+    }
     if (addResourcesDirToRebelXml) { 
       buildDefaultClasspathResources(builder);
     }
@@ -460,6 +497,9 @@ public class GenerateRebelMojo extends AbstractMojo {
   }
 
   private void buildDefaultWeb(RebelXmlBuilder builder, RebelWebResource defaultWeb) throws MojoExecutionException {
+    if (!generateDefaultWeb) {
+      return;
+    }
     Xpp3Dom warPluginConf = getPluginConfigurationDom(getProject(), "org.apache.maven.plugins:maven-war-plugin");
     if (warPluginConf != null) {
       //override defaults with configuration from war plugin
