@@ -157,6 +157,22 @@ public class GenerateRebelMojo extends AbstractMojo {
    * @parameter default-value="false"
    */
   private boolean alwaysGenerate;
+  
+  /**
+   * Indicates whether the default web element will be generated or not. Initial value is the same as {@link #generateDefaultElements} value.
+   */
+  private boolean generateDefaultWeb;
+
+  /**
+   * Indicates whether the default classpath element will be generated or not. Initial value is the same as {@link #generateDefaultElements} value.
+   */
+  private boolean generateDefaultClasspath;
+
+  /**
+   * If set to false rebel plugin will not generate default elements in rebel.xml.
+   * @parameter default-value="true"
+   */
+  private boolean generateDefaultElements;
 
   public void execute() throws MojoExecutionException, MojoFailureException {
     // do not generate rebel.xml file if 'performRelease' system property is set to true
@@ -168,6 +184,7 @@ public class GenerateRebelMojo extends AbstractMojo {
     }
     catch (SecurityException ignore) {}
     
+    generateDefaultWeb = generateDefaultClasspath = generateDefaultElements;
     File rebelXmlFile = new File(rebelXmlDirectory, "rebel.xml").getAbsoluteFile();
     File pomXmlFile = getProject().getFile();
     if (!alwaysGenerate && rebelXmlFile.exists() && pomXmlFile.exists() && rebelXmlFile.lastModified() > pomXmlFile.lastModified()) {
@@ -306,6 +323,9 @@ public class GenerateRebelMojo extends AbstractMojo {
   }
 
   private void buildDefaultClasspath(RebelXmlBuilder builder, RebelClasspathResource defaultClasspath) throws MojoExecutionException {
+    if (!generateDefaultClasspath) {
+      return;
+    }
     if (addResourcesDirToRebelXml) { 
       buildDefaultClasspathResources(builder);
     }
@@ -469,6 +489,9 @@ public class GenerateRebelMojo extends AbstractMojo {
   }
 
   private void buildDefaultWeb(RebelXmlBuilder builder, RebelWebResource defaultWeb) throws MojoExecutionException {
+    if (!generateDefaultWeb) {
+      return;
+    }
     Xpp3Dom warPluginConf = getPluginConfigurationDom(getProject(), "org.apache.maven.plugins:maven-war-plugin");
     if (warPluginConf != null) {
       //override defaults with configuration from war plugin
