@@ -198,6 +198,8 @@ public class GenerateRebelMojo extends AbstractMojo {
       builder = buildWar();
     } else if (JAR_PACKAGING.contains(packaging)) {
       builder = buildJar();
+    } else {
+      getLog().warn("Unsupported packaging type: " + packaging);
     }
 
     if (builder != null) {
@@ -263,6 +265,12 @@ public class GenerateRebelMojo extends AbstractMojo {
   private RebelXmlBuilder buildJar() throws MojoExecutionException {
     RebelXmlBuilder builder = new RebelXmlBuilder();
     buildClasspath(builder);
+    
+    // if user has specified any web elements, then let's generate these in the result file.
+    if (web != null && web.getResources().length != 0) {
+      generateDefaultWeb = false; // but don't generate default web element because this folder is most likely missing.
+      buildWeb(builder);
+    }
 
     return builder;
   }
