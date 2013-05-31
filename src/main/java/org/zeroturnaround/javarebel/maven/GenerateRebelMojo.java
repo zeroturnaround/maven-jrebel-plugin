@@ -267,7 +267,7 @@ public class GenerateRebelMojo extends AbstractMojo {
     buildClasspath(builder);
     
     // if user has specified any web elements, then let's generate these in the result file.
-    if (web != null && web.getResources().length != 0) {
+    if (web != null && web.getResources() != null && web.getResources().length != 0) {
       generateDefaultWeb = false; // but don't generate default web element because this folder is most likely missing.
       buildWeb(builder);
     }
