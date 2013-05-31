@@ -159,6 +159,15 @@ public class GenerateRebelMojo extends AbstractMojo {
   private boolean alwaysGenerate;
 
   public void execute() throws MojoExecutionException, MojoFailureException {
+    // do not generate rebel.xml file if 'performRelease' system property is set to true
+    try {
+      if (Boolean.getBoolean("performRelease")) {
+        getLog().info("Skipped generating rebel.xml.");
+        return;
+      }
+    }
+    catch (SecurityException ignore) {}
+    
     File rebelXmlFile = new File(rebelXmlDirectory, "rebel.xml").getAbsoluteFile();
     File pomXmlFile = getProject().getFile();
     if (!alwaysGenerate && rebelXmlFile.exists() && pomXmlFile.exists() && rebelXmlFile.lastModified() > pomXmlFile.lastModified()) {
