@@ -20,20 +20,20 @@ public class FixPathInSingleModuleProjectTest {
     m.setRelativePath(".");
 
     // root path of maven projects
-    m.setRootPath("C:/projects/topic_17576");
+    m.setRootPath("/projects/topic_17576");
 
     // the maven project
     m.setProject(new MavenProject());
-    m.getProject().setFile(new File("C:/projects/topic_17576/pom.xml"));
+    m.getProject().setFile(new File("/projects/topic_17576/pom.xml"));
   }
 
   @Test
   public void testFixAbsoluteFilePath() throws MojoExecutionException {
     // the path, which can be provided as parameter to JRebel plugin
-    String actualObj = m.fixFilePath("C:/projects/topic_17576/target/myclasses");
+    String actualObj = m.fixFilePath("/projects/topic_17576/target/myclasses");
 
     // test
-    assertEquals("C:/projects/topic_17576/target/myclasses", actualObj);
+    assertEquals("/projects/topic_17576/target/myclasses", actualObj);
   }
 
   @Test
@@ -42,6 +42,6 @@ public class FixPathInSingleModuleProjectTest {
     String actualObj = m.fixFilePath("target/myclasses");
 
     // test
-    assertEquals("C:/projects/topic_17576/target/myclasses", actualObj);
+    assertEquals("/projects/topic_17576/target/myclasses", actualObj);
   }
 }
