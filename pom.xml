@@ -2,12 +2,6 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <parent>
-    <groupId>org.sonatype.oss</groupId>
-    <artifactId>oss-parent</artifactId>
-    <version>7</version>
-  </parent>
-
   <groupId>org.zeroturnaround</groupId>
   <artifactId>jrebel-maven-plugin</artifactId>
   <version>1.1.5-SNAPSHOT</version>
@@ -62,38 +56,6 @@
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-gpg-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>sign-artifacts</id>
-            <phase>verify</phase>
-            <goals>
-              <goal>sign</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-<!--         <plugin>
-          <artifactId>maven-assembly-plugin</artifactId>
-          <version>2.2.1</version>
-          <configuration>
-            <appendAssemblyId>true</appendAssemblyId>
-            <descriptors>
-              <descriptor>src/main/assembly/bundle.xml</descriptor>
-            </descriptors>
-          </configuration>
-          <executions>
-            <execution>
-              <id>make-assembly</id>
-              <phase>install</phase>
-              <goals>
-                <goal>single</goal>
-              </goals>
-            </execution>
-          </executions>
-        </plugin> -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-release-plugin</artifactId>
         <version>2.4.1</version>
       </plugin>
@@ -106,37 +68,6 @@
       </extension>
     </extensions>
   </build>
-
-<!--   <distributionManagement>
-    <repository>
-      <id>zt-releases</id>
-      <name>ZeroTurnaround Releases</name>
-      <url>dav:http://repos.zeroturnaround.com/nexus/content/repositories/zt-releases</url>
-      <layout>default</layout>
-    </repository>
-    <snapshotRepository>
-      <id>zt-snapshots</id>
-      <name>ZeroTurnaround Snapshots</name>
-      <url>dav:http://repos.zeroturnaround.com/nexus/content/repositories/zt-snapshots</url>
-      <layout>default</layout>
-    </snapshotRepository>
-  </distributionManagement>
-  <repositories>
-    <repository>
-      <id>zt-releases</id>
-      <url>dav:http://repos.zeroturnaround.com/nexus/content/repositories/zt-releases</url>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </repository>
-    <repository>
-      <id>zt-snapshots</id>
-      <url>dav:http://repos.zeroturnaround.com/nexus/content/repositories/zt-snapshots</url>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-  </repositories> -->
 
   <dependencies>
     <dependency>
@@ -171,4 +102,19 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+  <distributionManagement>
+    <repository>
+      <id>sonatype-nexus-staging</id>
+      <name>Sonatype OSS Staging</name>
+      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+      <layout>default</layout>
+    </repository>
+    <snapshotRepository>
+      <id>sonatype-nexus-snapshots</id>
+      <name>Sonatype OSS Snapshots</name>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+      <layout>default</layout>
+    </snapshotRepository>
+  </distributionManagement>
 </project>
