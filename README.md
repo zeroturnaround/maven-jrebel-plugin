@@ -12,6 +12,7 @@ Add the following snippet to pom.xml of your maven project to generate rebel.xml
 <plugin>
   <groupId>org.zeroturnaround</groupId>
   <artifactId>jrebel-maven-plugin</artifactId>
+  <version>1.1.5</version>
   <executions>
     <execution>
       <id>generate-rebel-xml</id>
