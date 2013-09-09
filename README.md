@@ -36,6 +36,7 @@ Add the following snippet to pom.xml of your maven project to generate liverebel
 <plugin>
   <groupId>org.zeroturnaround</groupId>
   <artifactId>jrebel-maven-plugin</artifactId>
+  <version>1.1.5</version>
   <!-- Optional configuration -->
   <configuration>
     <name>${project.artifactId}-development</name>
