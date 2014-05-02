@@ -26,6 +26,7 @@ import org.codehaus.plexus.util.StringUtils;
 import org.codehaus.plexus.util.interpolation.ObjectBasedValueSource;
 import org.codehaus.plexus.util.interpolation.RegexBasedInterpolator;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
+import org.sonatype.plexus.build.incremental.BuildContext;
 import org.zeroturnaround.javarebel.maven.model.RebelClasspath;
 import org.zeroturnaround.javarebel.maven.model.RebelClasspathResource;
 import org.zeroturnaround.javarebel.maven.model.RebelResource;
@@ -181,6 +182,9 @@ public class GenerateRebelMojo extends AbstractMojo {
    */
   private boolean skip;
   
+  /** @component */
+  private BuildContext buildContext;
+  
 
   public void execute() throws MojoExecutionException, MojoFailureException {
     // do not generate rebel.xml file if skip parameter or 'performRelease' system property is set to true
@@ -238,6 +242,10 @@ public class GenerateRebelMojo extends AbstractMojo {
           }
           catch (IOException ie) {
             // ignore exception
+          }
+          if (buildContext != null) {
+            // safeguard for null buildContext. Can it be null, actually? E.g when field is not injected.
+            buildContext.refresh(rebelXmlFile);
           }
         }
       }
