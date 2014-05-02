@@ -173,11 +173,19 @@ public class GenerateRebelMojo extends AbstractMojo {
    * @parameter default-value="true"
    */
   private boolean generateDefaultElements;
+  
+  /**
+   * If set to true rebel plugin execution will be skipped.
+   * 
+   * @parameter default-value="false"
+   */
+  private boolean skip;
+  
 
   public void execute() throws MojoExecutionException, MojoFailureException {
-    // do not generate rebel.xml file if 'performRelease' system property is set to true
+    // do not generate rebel.xml file if skip parameter or 'performRelease' system property is set to true
     try {
-      if (Boolean.getBoolean("performRelease")) {
+      if (skip || Boolean.getBoolean("performRelease")) {
         getLog().info("Skipped generating rebel.xml.");
         return;
       }
