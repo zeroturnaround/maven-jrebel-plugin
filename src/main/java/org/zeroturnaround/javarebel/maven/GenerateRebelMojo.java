@@ -1,5 +1,7 @@
 package org.zeroturnaround.javarebel.maven;
 
+import hidden.org.codehaus.plexus.interpolation.InterpolationException;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -736,7 +738,13 @@ public class GenerateRebelMojo extends AbstractMojo {
     RegexBasedInterpolator interpolator = new RegexBasedInterpolator();
     interpolator.addValueSource(new ObjectBasedValueSource(project));
 
-    return interpolator.interpolate(value, "project");
+    try {
+      return interpolator.interpolate(value, "project");
+    }
+    catch (InterpolationException e) {
+      e.printStackTrace();
+    }
+    return value;
   }
 
   protected String fixFilePath(String path) throws MojoExecutionException {
