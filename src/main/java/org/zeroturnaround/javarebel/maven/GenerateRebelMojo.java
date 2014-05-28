@@ -162,17 +162,22 @@ public class GenerateRebelMojo extends AbstractMojo {
   private boolean alwaysGenerate;
   
   /**
-   * Indicates whether the default web element will be generated or not. Initial value is the same as {@link #generateDefaultElements} value.
+   * Indicates whether the default web element will be generated or not. This parameter has effect only when {@link #generateDefaultElements} is <code>true</code>.
+   * 
+   * @parameter default-value="true"
    */
   private boolean generateDefaultWeb;
 
   /**
-   * Indicates whether the default classpath element will be generated or not. Initial value is the same as {@link #generateDefaultElements} value.
+   * Indicates whether the default classpath element will be generated or not. This parameter has effect only when {@link #generateDefaultElements} is <code>true</code>.
+   * 
+   * @parameter default-value="true"
    */
   private boolean generateDefaultClasspath;
 
   /**
    * If set to false rebel plugin will not generate default elements in rebel.xml.
+   * 
    * @parameter default-value="true"
    */
   private boolean generateDefaultElements;
@@ -198,7 +203,11 @@ public class GenerateRebelMojo extends AbstractMojo {
     }
     catch (SecurityException ignore) {}
     
-    generateDefaultWeb = generateDefaultClasspath = generateDefaultElements;
+    // if generateDefaultElements is set to false, then disable default classpath and web elements no matter what are their initial values.
+    if (!generateDefaultElements) {
+      generateDefaultClasspath = false;
+      generateDefaultWeb = false;
+    }
     File rebelXmlFile = new File(rebelXmlDirectory, "rebel.xml").getAbsoluteFile();
     File pomXmlFile = getProject().getFile();
     if (!alwaysGenerate && rebelXmlFile.exists() && pomXmlFile.exists() && rebelXmlFile.lastModified() > pomXmlFile.lastModified()) {
