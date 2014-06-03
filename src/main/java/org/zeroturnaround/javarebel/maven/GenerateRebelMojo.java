@@ -1,5 +1,7 @@
 package org.zeroturnaround.javarebel.maven;
 
+import hidden.org.codehaus.plexus.interpolation.InterpolationException;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -26,6 +28,7 @@ import org.codehaus.plexus.util.StringUtils;
 import org.codehaus.plexus.util.interpolation.ObjectBasedValueSource;
 import org.codehaus.plexus.util.interpolation.RegexBasedInterpolator;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
+import org.sonatype.plexus.build.incremental.BuildContext;
 import org.zeroturnaround.javarebel.maven.model.RebelClasspath;
 import org.zeroturnaround.javarebel.maven.model.RebelClasspathResource;
 import org.zeroturnaround.javarebel.maven.model.RebelResource;
@@ -159,32 +162,52 @@ public class GenerateRebelMojo extends AbstractMojo {
   private boolean alwaysGenerate;
   
   /**
-   * Indicates whether the default web element will be generated or not. Initial value is the same as {@link #generateDefaultElements} value.
+   * Indicates whether the default web element will be generated or not. This parameter has effect only when {@link #generateDefaultElements} is <code>true</code>.
+   * 
+   * @parameter default-value="true"
    */
   private boolean generateDefaultWeb;
 
   /**
-   * Indicates whether the default classpath element will be generated or not. Initial value is the same as {@link #generateDefaultElements} value.
+   * Indicates whether the default classpath element will be generated or not. This parameter has effect only when {@link #generateDefaultElements} is <code>true</code>.
+   * 
+   * @parameter default-value="true"
    */
   private boolean generateDefaultClasspath;
 
   /**
    * If set to false rebel plugin will not generate default elements in rebel.xml.
+   * 
    * @parameter default-value="true"
    */
   private boolean generateDefaultElements;
+  
+  /**
+   * If set to true rebel plugin execution will be skipped.
+   * 
+   * @parameter default-value="false"
+   */
+  private boolean skip;
+  
+  /** @component */
+  private BuildContext buildContext;
+  
 
   public void execute() throws MojoExecutionException, MojoFailureException {
-    // do not generate rebel.xml file if 'performRelease' system property is set to true
+    // do not generate rebel.xml file if skip parameter or 'performRelease' system property is set to true
     try {
-      if (Boolean.getBoolean("performRelease")) {
+      if (skip || Boolean.getBoolean("performRelease")) {
         getLog().info("Skipped generating rebel.xml.");
         return;
       }
     }
     catch (SecurityException ignore) {}
     
-    generateDefaultWeb = generateDefaultClasspath = generateDefaultElements;
+    // if generateDefaultElements is set to false, then disable default classpath and web elements no matter what are their initial values.
+    if (!generateDefaultElements) {
+      generateDefaultClasspath = false;
+      generateDefaultWeb = false;
+    }
     File rebelXmlFile = new File(rebelXmlDirectory, "rebel.xml").getAbsoluteFile();
     File pomXmlFile = getProject().getFile();
     if (!alwaysGenerate && rebelXmlFile.exists() && pomXmlFile.exists() && rebelXmlFile.lastModified() > pomXmlFile.lastModified()) {
@@ -230,6 +253,10 @@ public class GenerateRebelMojo extends AbstractMojo {
           }
           catch (IOException ie) {
             // ignore exception
+          }
+          if (buildContext != null) {
+            // safeguard for null buildContext. Can it be null, actually? E.g when field is not injected.
+            buildContext.refresh(rebelXmlFile);
           }
         }
       }
@@ -720,7 +747,13 @@ public class GenerateRebelMojo extends AbstractMojo {
     RegexBasedInterpolator interpolator = new RegexBasedInterpolator();
     interpolator.addValueSource(new ObjectBasedValueSource(project));
 
-    return interpolator.interpolate(value, "project");
+    try {
+      return interpolator.interpolate(value, "project");
+    }
+    catch (InterpolationException e) {
+      e.printStackTrace();
+    }
+    return value;
   }
 
   protected String fixFilePath(String path) throws MojoExecutionException {
