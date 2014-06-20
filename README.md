@@ -1,12 +1,14 @@
 JRebel plugin for Maven
 -----------------------
 
-This plugin is used in order to generate rebel.xml configuration file for JRebel or liverebel.xml configuration for LiveRebel.
+This plugin is used to generate the **rebel.xml** configuration file for JRebel or the **liverebel.xml** configuration for LiveRebel.
+
+For more information, please refer to the documentation at: **http://manuals.zeroturnaround.com/jrebel/standalone/config.html#maven** 
 
 Usage
 -----
 
-Add the following snippet to pom.xml of your maven project to generate rebel.xml configuration
+Add the following snippet to the **pom.xml** of your Maven project to generate the **rebel.xml** configuration:
 
 ```xml
 <plugin>
@@ -30,7 +32,7 @@ To manually execute the goal, run 'mvn jrebel:generate' and rebel.xml will be ge
 LiveRebel
 ---------
 
-Add the following snippet to pom.xml of your maven project to generate liverebel.xml configuration
+Add the following snippet to the **pom.xml** of your Maven project to generate the **liverebel.xml** configuration:
 
 ```xml
 <plugin>
@@ -55,4 +57,3 @@ Add the following snippet to pom.xml of your maven project to generate liverebel
 ```
 
 To manually execute the goal, run 'mvn jrebel:generate-liverebel-xml' and rebel.xml will be generated to the target directory. 
-
