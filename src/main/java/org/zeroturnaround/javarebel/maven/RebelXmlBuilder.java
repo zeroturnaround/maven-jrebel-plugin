@@ -20,10 +20,10 @@ import org.zeroturnaround.javarebel.maven.model.RebelResource;
 class RebelXmlBuilder {
 
   private String fallbackClasspath;
-  private List classpathDir = new ArrayList();
-  private List classpathJar = new ArrayList();
-  private List classpathJarset = new ArrayList();
-  private List classpathDirset = new ArrayList();
+  private final List classpathDir = new ArrayList();
+  private final List classpathJar = new ArrayList();
+  private final List classpathJarset = new ArrayList();
+  private final List classpathDirset = new ArrayList();
 
   private RebelWar war;
 

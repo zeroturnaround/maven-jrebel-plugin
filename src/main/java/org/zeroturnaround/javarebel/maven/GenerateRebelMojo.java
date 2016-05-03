@@ -17,6 +17,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.AbstractMojo;
@@ -38,25 +40,26 @@ import org.zeroturnaround.javarebel.maven.model.RebelWebResource;
 
 /**
  * Generate rebel.xml
- * 
+ *
  * @goal generate
- * @phase process-resources
+ * @phase generate-resources
  * @threadSafe true
  */
 public class GenerateRebelMojo extends AbstractMojo {
 
-  private static final String[] DEFAULT_INCLUDES = { "**/**" };
+  private static final String[] DEFAULT_INCLUDES = {"**/**"};
 
   private static final Set JAR_PACKAGING = new HashSet();
   private static final Set WAR_PACKAGING = new HashSet();
+
   static {
-    JAR_PACKAGING.addAll(Arrays.asList(new String[] {"jar", "ejb", "ejb3", "nbm", "hk2-jar", "bundle", "eclipse-plugin", "atlassian-plugin"}));
-    WAR_PACKAGING.addAll(Arrays.asList(new String[] {"war", "grails-app"}));
+    JAR_PACKAGING.addAll(Arrays.asList(new String[]{"jar", "ejb", "ejb3", "nbm", "hk2-jar", "bundle", "eclipse-plugin", "atlassian-plugin"}));
+    WAR_PACKAGING.addAll(Arrays.asList(new String[]{"war", "grails-app"}));
   }
 
   /**
    * The maven project.
-   * 
+   *
    * @parameter expression="${project}"
    * @required
    * @readonly
@@ -65,7 +68,7 @@ public class GenerateRebelMojo extends AbstractMojo {
 
   /**
    * Packaging of project.
-   * 
+   *
    * @parameter expression="${project.packaging}"
    * @required
    */
@@ -73,7 +76,7 @@ public class GenerateRebelMojo extends AbstractMojo {
 
   /**
    * The directory containing generated classes.
-   * 
+   *
    * @parameter expression="${project.build.outputDirectory}"
    * @required
    */
@@ -81,7 +84,7 @@ public class GenerateRebelMojo extends AbstractMojo {
 
   /**
    * Root directory for all html/jsp etc files.
-   * 
+   *
    * @parameter expression="${basedir}/src/main/webapp"
    * @required
    */
@@ -97,28 +100,28 @@ public class GenerateRebelMojo extends AbstractMojo {
 
   /**
    * Rebel classpath configuration.
-   * 
+   *
    * @parameter
    */
   private RebelClasspath classpath;
 
   /**
    * Rebel war configuration.
-   * 
+   *
    * @parameter
    */
   private RebelWar war;
 
   /**
    * Rebel web configuration.
-   * 
+   *
    * @parameter
    */
   private RebelWeb web;
 
   /**
    * Root path of maven projects.
-   * 
+   *
    * @parameter default-value="${basedir}"
    * @required
    */
@@ -126,90 +129,137 @@ public class GenerateRebelMojo extends AbstractMojo {
 
   /**
    * Relative path to root of current project.
-   * 
+   *
    * @parameter default-value="."
    * @required
    */
   private String relativePath;
 
   /**
-   * Target directory for generated rebel.xml
-   * 
-   * @parameter expression="${rebel.xml.dir}" default-value="${project.build.outputDirectory}"
-   * @required
+   * Target directory for generated rebel.xml, if it is not defined then plugin will generate rebel.xml in first found resource folder.
+   *
+   * @parameter expression="${rebel.xml.dir}"
    */
   private File rebelXmlDirectory;
 
   /**
    * If set to true rebel plugin will write generated xml at info level.
-   * 
+   *
    * @parameter expression="${rebel.generate.show}" default-value="false"
    */
   private boolean showGenerated;
 
   /**
    * If set to true rebel plugin will add resources directories to rebel.xml classpath.
-   * 
+   *
    * @parameter default-value="false"
    */
   private boolean addResourcesDirToRebelXml;
 
   /**
    * If set to true rebel plugin will generate rebel.xml on each build, otherwise the timestamps of rebel.xml and pom.xml are compared.
-   * 
+   *
    * @parameter default-value="false"
    */
   private boolean alwaysGenerate;
-  
+
   /**
    * Indicates whether the default web element will be generated or not. This parameter has effect only when {@link #generateDefaultElements} is <code>true</code>.
-   * 
+   *
    * @parameter default-value="true"
    */
   private boolean generateDefaultWeb;
 
   /**
    * Indicates whether the default classpath element will be generated or not. This parameter has effect only when {@link #generateDefaultElements} is <code>true</code>.
-   * 
+   *
    * @parameter default-value="true"
    */
   private boolean generateDefaultClasspath;
 
   /**
    * If set to false rebel plugin will not generate default elements in rebel.xml.
-   * 
+   *
    * @parameter default-value="true"
    */
   private boolean generateDefaultElements;
-  
+
   /**
    * If set to true rebel plugin execution will be skipped.
-   * 
+   *
    * @parameter default-value="false"
    */
   private boolean skip;
-  
+
   /** @component */
   private BuildContext buildContext;
-  
+
+  private String findResourceFolder(final boolean onlyExisting) {
+    final List list = this.project.getBuild().getResources();
+    String result = null;
+    if (!list.isEmpty()) {
+      for (final Object r : list) {
+        final Resource resource = (Resource) r;
+        if (resource != null && resource.getDirectory() != null && resource.getDirectory().length() > 0) {
+          result = FilenameUtils.normalize(resource.getDirectory());
+          if (onlyExisting) {
+            if (!new File(result).isDirectory()) {
+              // don't make so big change in user's project as creating a folder in project
+              getLog().debug("Ignoring resource folder " + result + " because it doesn't exist");
+              result = null;
+            } else {
+              break;
+            }
+          } else {
+            break;
+          }
+        }
+      }
+    }
+    return result;
+  }
+
+  private File findFolderForRebelXml() throws MojoFailureException {
+    final String foundResourceFolder = findResourceFolder(false);
+    
+    getLog().debug("Detected resource folder : " + foundResourceFolder);
+
+    File result;
+    if (this.rebelXmlDirectory == null) {
+      getLog().debug("rebelXmlDirectory is null");
+      if (foundResourceFolder == null) {
+        result = new File(this.project.getBuild().getOutputDirectory());
+      } else {
+        result = new File(foundResourceFolder);
+      }
+    } else {
+      getLog().debug("rebelXmlDirectory is " + this.rebelXmlDirectory);
+      result = this.rebelXmlDirectory;
+    }
+    return result;
+  }
 
   public void execute() throws MojoExecutionException, MojoFailureException {
     // do not generate rebel.xml file if skip parameter or 'performRelease' system property is set to true
     try {
-      if (skip || Boolean.getBoolean("performRelease")) {
+      if (this.skip || Boolean.getBoolean("performRelease")) {
         getLog().info("Skipped generating rebel.xml.");
         return;
       }
+    } catch (SecurityException ignore) {
     }
-    catch (SecurityException ignore) {}
-    
+
     // if generateDefaultElements is set to false, then disable default classpath and web elements no matter what are their initial values.
-    if (!generateDefaultElements) {
-      generateDefaultClasspath = false;
-      generateDefaultWeb = false;
+    if (!this.generateDefaultElements) {
+      this.generateDefaultClasspath = false;
+      this.generateDefaultWeb = false;
     }
-    File rebelXmlFile = new File(rebelXmlDirectory, "rebel.xml").getAbsoluteFile();
-    File pomXmlFile = getProject().getFile();
+
+    final File rebelXmlTargetFolder = findFolderForRebelXml();
+    getLog().info("Folder for rebel.xml : " + rebelXmlTargetFolder);
+
+    final File rebelXmlFile = new File(rebelXmlTargetFolder, "rebel.xml").getAbsoluteFile();
+    final File pomXmlFile = getProject().getFile();
     if (!alwaysGenerate && rebelXmlFile.exists() && pomXmlFile.exists() && rebelXmlFile.lastModified() > pomXmlFile.lastModified()) {
       return;
     }
@@ -227,37 +277,29 @@ public class GenerateRebelMojo extends AbstractMojo {
 
     if (builder != null) {
       Writer w = null;
-      if (showGenerated) {
+      if (this.showGenerated) {
         try {
           w = new StringWriter();
           builder.writeXml(w);
           getLog().info(w.toString());
-        }
-        catch (IOException e) {
-          // ignore exception
+        } catch (IOException e) {
+          getLog().debug("Detected exception during 'showGenerated' : ",e);
         }
       }
 
       try {
-        rebelXmlDirectory.mkdirs();
+        if (!rebelXmlTargetFolder.exists() && !rebelXmlTargetFolder.mkdirs()) {
+          throw new MojoFailureException("Can't make folder for rebel.xml : " + rebelXmlTargetFolder);
+        }
         w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(rebelXmlFile), "UTF-8"));
         builder.writeXml(w);
-      }
-      catch (IOException e) {
+      } catch (IOException e) {
         throw new MojoExecutionException("Failed writing rebel.xml", e);
-      }
-      finally {
-        if (w != null) {
-          try {
-            w.close();
-          }
-          catch (IOException ie) {
-            // ignore exception
-          }
-          if (buildContext != null) {
-            // safeguard for null buildContext. Can it be null, actually? E.g when field is not injected.
-            buildContext.refresh(rebelXmlFile);
-          }
+      } finally {
+        IOUtils.closeQuietly(w);
+        if (this.buildContext != null) {
+          // safeguard for null buildContext. Can it be null, actually? E.g when field is not injected.
+          this.buildContext.refresh(rebelXmlFile);
         }
       }
     }
@@ -265,7 +307,7 @@ public class GenerateRebelMojo extends AbstractMojo {
 
   /**
    * Build war configuration.
-   * 
+   *
    * @return
    * @throws MojoExecutionException
    */
@@ -285,14 +327,14 @@ public class GenerateRebelMojo extends AbstractMojo {
 
   /**
    * Build jar configuration.
-   * 
+   *
    * @return
    * @throws MojoExecutionException
    */
   private RebelXmlBuilder buildJar() throws MojoExecutionException {
     RebelXmlBuilder builder = new RebelXmlBuilder();
     buildClasspath(builder);
-    
+
     // if user has specified any web elements, then let's generate these in the result file.
     if (web != null && web.getResources() != null && web.getResources().length != 0) {
       generateDefaultWeb = false; // but don't generate default web element because this folder is most likely missing.
@@ -309,10 +351,9 @@ public class GenerateRebelMojo extends AbstractMojo {
     // is then don't put default classpath as
     // first but put it where this element was.
     if (classpath != null) {
-      RebelClasspathResource[] resources = classpath.getResources();
+      final RebelClasspathResource[] resources = classpath.getResources();
       if (resources != null && resources.length > 0) {
-        for (int i = 0; i < resources.length; i++) {
-          RebelClasspathResource r = resources[i];
+        for (final RebelClasspathResource r : resources) {
           if (!r.isTargetSet()) {
             addDefaultAsFirst = false;
             defaultClasspath = r;
@@ -328,10 +369,9 @@ public class GenerateRebelMojo extends AbstractMojo {
 
     if (classpath != null) {
       builder.setFallbackClasspath(classpath.getFallback());
-      RebelClasspathResource[] resources = classpath.getResources();
+      final RebelClasspathResource[] resources = classpath.getResources();
       if (resources != null && resources.length > 0) {
-        for (int i = 0; i < resources.length; i++) {
-          RebelClasspathResource r = resources[i];
+        for (final RebelClasspathResource r : resources) {
           if (r.isTargetSet()) {
             if (r.getDirectory() != null) {
               r.setDirectory(fixFilePath(r.getDirectory()));
@@ -361,7 +401,7 @@ public class GenerateRebelMojo extends AbstractMojo {
     if (!generateDefaultClasspath) {
       return;
     }
-    if (addResourcesDirToRebelXml) { 
+    if (addResourcesDirToRebelXml) {
       buildDefaultClasspathResources(builder);
     }
 
@@ -376,9 +416,9 @@ public class GenerateRebelMojo extends AbstractMojo {
   }
 
   private void buildDefaultClasspathResources(RebelXmlBuilder builder) throws MojoExecutionException {
-    boolean overwrite = Boolean.valueOf(getPluginSetting(getProject(), "org.apache.maven.plugins:maven-resources-plugin", "overwrite", "false")).booleanValue();
+    final boolean overwrite = Boolean.valueOf(getPluginSetting(getProject(), "org.apache.maven.plugins:maven-resources-plugin", "overwrite", "false"));
 
-    RebelClasspathResource r = null;
+    RebelClasspathResource rebelClassPathResource;
 
     List resources = getProject().getResources();
     //if resources plugin is set to overwrite then reverse the order of resources
@@ -397,26 +437,25 @@ public class GenerateRebelMojo extends AbstractMojo {
         continue;
       }
 
-      r = new RebelClasspathResource();
+      rebelClassPathResource = new RebelClasspathResource();
 
       if (resource.isFiltering() || resource.getTargetPath() != null) {
-        if (!handleResourceAsInclude(r, resource)) {
+        if (!handleResourceAsInclude(rebelClassPathResource, resource)) {
           continue;
         }
         //point filtered resources to target directory
-        r.setDirectory(fixFilePath(classesDirectory));
+        rebelClassPathResource.setDirectory(fixFilePath(classesDirectory));
         //add target path as prefix to includes
         if (resource.getTargetPath() != null) {
-          setIncludePrefix(r.getIncludes(), resource.getTargetPath());
+          setIncludePrefix(rebelClassPathResource.getIncludes(), resource.getTargetPath());
         }
-      }
-      else {
-        r.setDirectory(fixFilePath(resource.getDirectory()));
-        r.setExcludes(resource.getExcludes());
-        r.setIncludes(resource.getIncludes());
+      } else {
+        rebelClassPathResource.setDirectory(fixFilePath(resource.getDirectory()));
+        rebelClassPathResource.setExcludes(resource.getExcludes());
+        rebelClassPathResource.setIncludes(resource.getIncludes());
       }
 
-      builder.addClasspathDir(r);
+      builder.addClasspathDir(rebelClassPathResource);
     }
   }
 
@@ -425,7 +464,7 @@ public class GenerateRebelMojo extends AbstractMojo {
       prefix = prefix + "/";
     }
     for (int i = 0; i < includes.size(); i++) {
-      includes.set(i, prefix + (String)includes.get(i));
+      includes.set(i, prefix + (String) includes.get(i));
     }
   }
 
@@ -448,8 +487,8 @@ public class GenerateRebelMojo extends AbstractMojo {
     if (files.length > 0) {
       //only include files that come from this directory
       List includedFiles = new ArrayList();
-      for (int i = 0; i < files.length; i++) {
-        includedFiles.add(StringUtils.replace(files[i], '\\', '/'));
+      for (final String file : files) {
+        includedFiles.add(StringUtils.replace(file, '\\', '/'));
       }
       rebelResouce.setIncludes(includedFiles);
     } else {
@@ -462,7 +501,7 @@ public class GenerateRebelMojo extends AbstractMojo {
 
   /**
    * Taken from war plugin.
-   * 
+   *
    * @param resource
    * @return array of file names that would be copied from specified resource
    */
@@ -471,8 +510,7 @@ public class GenerateRebelMojo extends AbstractMojo {
     scanner.setBasedir(resource.getDirectory());
     if (resource.getIncludes() != null && !resource.getIncludes().isEmpty()) {
       scanner.setIncludes((String[]) resource.getIncludes().toArray(new String[resource.getIncludes().size()]));
-    }
-    else {
+    } else {
       scanner.setIncludes(DEFAULT_INCLUDES);
     }
     if (resource.getExcludes() != null && !resource.getExcludes().isEmpty()) {
@@ -490,10 +528,9 @@ public class GenerateRebelMojo extends AbstractMojo {
     boolean addDefaultAsFirst = true;
     RebelWebResource defaultWeb = null;
     if (web != null) {
-      RebelWebResource[] resources = web.getResources();
+      final RebelWebResource[] resources = web.getResources();
       if (resources != null && resources.length > 0) {
-        for (int i = 0; i < resources.length; i++) {
-          RebelWebResource r = resources[i];
+        for (final RebelWebResource r : resources) {
           if (r.getDirectory() == null && r.getTarget() == null) {
             defaultWeb = r;
             addDefaultAsFirst = false;
@@ -508,10 +545,9 @@ public class GenerateRebelMojo extends AbstractMojo {
     }
 
     if (web != null) {
-      RebelWebResource[] resources = web.getResources();
+      final RebelWebResource[] resources = web.getResources();
       if (resources != null && resources.length > 0) {
-        for (int i = 0; i < resources.length; i++) {
-          RebelWebResource r = resources[i];
+        for (final RebelWebResource r : resources) {
           if (r.getDirectory() == null && r.getTarget() == null) {
             buildDefaultWeb(builder, r);
             continue;
@@ -523,7 +559,7 @@ public class GenerateRebelMojo extends AbstractMojo {
     }
   }
 
-  private void buildDefaultWeb(RebelXmlBuilder builder, RebelWebResource defaultWeb) throws MojoExecutionException {
+  private void buildDefaultWeb(final RebelXmlBuilder builder, final RebelWebResource defaultWeb) throws MojoExecutionException {
     if (!generateDefaultWeb) {
       return;
     }
@@ -579,17 +615,15 @@ public class GenerateRebelMojo extends AbstractMojo {
                 if (StringUtils.isNotEmpty(target)) {
                   setIncludePrefix(rc.getIncludes(), target);
                 }
-              }
-              else {
+              } else {
                 rc.setDirectory(fixFilePath(resource.getDirectory()));
                 rc.setExcludes(resource.getExcludes());
                 rc.setIncludes(resource.getIncludes());
               }
-  
+
               builder.addClasspathDir(rc);
             }
-          }
-          else {
+          } else {
             RebelWebResource r = new RebelWebResource();
             r.setTarget(resource.getTargetPath());
 
@@ -598,8 +632,7 @@ public class GenerateRebelMojo extends AbstractMojo {
               if (!handleResourceAsInclude(r, resource)) {
                 continue;
               }
-            }
-            else {
+            } else {
               r.setDirectory(fixFilePath(resource.getDirectory()));
               r.setExcludes(resource.getExcludes());
               r.setIncludes(resource.getIncludes());
@@ -622,19 +655,18 @@ public class GenerateRebelMojo extends AbstractMojo {
 
   /**
    * Parse resources node content.
-   * 
+   *
    * @param warResourcesNode
    * @return
    */
   private List parseWarResources(Xpp3Dom warResourcesNode) {
-    List resources = new ArrayList();
-    Xpp3Dom[] resourceNodes = warResourcesNode.getChildren("resource");
-    for (int i = 0; i < resourceNodes.length; i++) {
-      if (resourceNodes[i] == null || resourceNodes[i].getChild("directory") == null) {
+    final List resources = new ArrayList();
+    final Xpp3Dom[] resourceNodes = warResourcesNode.getChildren("resource");
+    for (final Xpp3Dom resourceNode : resourceNodes) {
+      if (resourceNode == null || resourceNode.getChild("directory") == null) {
         continue;
       }
-      Resource resource = parseResourceNode(resourceNodes[i]);
-      resources.add(resource);
+      resources.add(parseResourceNode(resourceNode));
     }
 
     return resources;
@@ -642,7 +674,7 @@ public class GenerateRebelMojo extends AbstractMojo {
 
   /**
    * Parse resouce node content.
-   * 
+   *
    * @param rn
    * @return
    */
@@ -652,28 +684,28 @@ public class GenerateRebelMojo extends AbstractMojo {
       r.setDirectory(getValue(getProject(), rn.getChild("directory")));
     }
     if (rn.getChild("filtering") != null) {
-      r.setFiltering((new Boolean(getValue(getProject(), rn.getChild("filtering")))).booleanValue());
+      r.setFiltering((Boolean.valueOf(getValue(getProject(), rn.getChild("filtering")))));
     }
     if (rn.getChild("targetPath") != null) {
       r.setTargetPath(rn.getChild("targetPath").getValue());
     }
 
     if (rn.getChild("excludes") != null) {
-      List excludes = new ArrayList();
-      Xpp3Dom[] excludeNodes = rn.getChild("excludes").getChildren("exclude");
-      for (int i = 0; i < excludeNodes.length; i++) {
-        if (excludeNodes[i] != null && excludeNodes[i].getValue() != null) {
-          excludes.add(getValue(getProject(), excludeNodes[i]));
+      final List excludes = new ArrayList();
+      final Xpp3Dom[] excludeNodes = rn.getChild("excludes").getChildren("exclude");
+      for (final Xpp3Dom excludeNode : excludeNodes) {
+        if (excludeNode != null && excludeNode.getValue() != null) {
+          excludes.add(getValue(getProject(), excludeNode));
         }
       }
       r.setExcludes(excludes);
     }
     if (rn.getChild("includes") != null) {
-      List includes = new ArrayList();
-      Xpp3Dom[] includeNodes = rn.getChild("includes").getChildren("include");
-      for (int i = 0; i < includeNodes.length; i++) {
-        if (includeNodes[i] != null && includeNodes[i].getValue() != null) {
-          includes.add(getValue(getProject(), includeNodes[i]));
+      final List includes = new ArrayList();
+      final Xpp3Dom[] includeNodes = rn.getChild("includes").getChildren("include");
+      for (final Xpp3Dom includeNode : includeNodes) {
+        if (includeNode != null && includeNode.getValue() != null) {
+          includes.add(getValue(getProject(), includeNode));
         }
       }
       r.setIncludes(includes);
@@ -683,13 +715,10 @@ public class GenerateRebelMojo extends AbstractMojo {
   }
 
   /**
-   * Taken from eclipse plugin.
-   * Search for the configuration Xpp3 dom of an other plugin.
-   * 
-   * @param project
-   *          the current maven project to get the configuration from.
-   * @param pluginId
-   *          the group id and artifact id of the plugin to search for
+   * Taken from eclipse plugin. Search for the configuration Xpp3 dom of an other plugin.
+   *
+   * @param project the current maven project to get the configuration from.
+   * @param pluginId the group id and artifact id of the plugin to search for
    * @return the value of the plugin configuration
    */
   private static Xpp3Dom getPluginConfigurationDom(MavenProject project, String pluginId) {
@@ -703,15 +732,11 @@ public class GenerateRebelMojo extends AbstractMojo {
 
   /**
    * Search for a configuration setting of an other plugin.
-   * 
-   * @param project
-   *          the current maven project to get the configuration from.
-   * @param pluginId
-   *          the group id and artifact id of the plugin to search for
-   * @param optionName
-   *          the option to get from the configuration
-   * @param defaultValue
-   *          the default value if the configuration was not found
+   *
+   * @param project the current maven project to get the configuration from.
+   * @param pluginId the group id and artifact id of the plugin to search for
+   * @param optionName the option to get from the configuration
+   * @param defaultValue the default value if the configuration was not found
    * @return the value of the option configured in the plugin configuration
    */
   private static String getPluginSetting(MavenProject project, String pluginId, String optionName, String defaultValue) {
@@ -729,7 +754,7 @@ public class GenerateRebelMojo extends AbstractMojo {
   }
 
   private static String getValue(MavenProject project, String value) {
-    if (value != null && value.indexOf("$") > -1) {
+    if (value != null && value.contains("$")) {
       return getInterpolatorValue(project, value);
     }
 
@@ -738,7 +763,7 @@ public class GenerateRebelMojo extends AbstractMojo {
 
   /**
    * Maven versions prior to 2.0.9 don't interpolate all ${project.*} values, so we'll need to do it ourself.
-   * 
+   *
    * @param project
    * @param value
    * @return
@@ -749,8 +774,7 @@ public class GenerateRebelMojo extends AbstractMojo {
 
     try {
       return interpolator.interpolate(value, "project");
-    }
-    catch (InterpolationException e) {
+    } catch (InterpolationException e) {
       e.printStackTrace();
     }
     return value;
@@ -762,7 +786,7 @@ public class GenerateRebelMojo extends AbstractMojo {
 
   /**
    * Returns path expressed through rootPath & relativePath.
-   * 
+   *
    * @param path
    * @return fixed path
    * @throws MojoExecutionException
@@ -787,7 +811,7 @@ public class GenerateRebelMojo extends AbstractMojo {
     //if root path is absolute then try to get a path relative to root
     if ((new File(getRootPath())).isAbsolute()) {
       String s = getRelativePath(new File(getRootPath()), file);
-      
+
       if (!(new File(s)).isAbsolute()) {
         return StringUtils.replace(getRootPath(), '\\', '/') + "/" + s;
       } else {
@@ -831,14 +855,13 @@ public class GenerateRebelMojo extends AbstractMojo {
     String basedirpath = getCanonicalPath(baseDir);
     String absolutePath = getCanonicalPath(file);
 
-    return absolutePath.startsWith(basedirpath); 
+    return absolutePath.startsWith(basedirpath);
   }
 
   private static String getCanonicalPath(File file) throws MojoExecutionException {
     try {
       return file.getCanonicalPath();
-    }
-    catch (IOException e) {
+    } catch (IOException e) {
       throw new MojoExecutionException("Failed to get canonical path of " + file.getAbsolutePath(), e);
     }
   }
