@@ -7,6 +7,10 @@
   <version>1.1.6-SNAPSHOT</version>
   <packaging>maven-plugin</packaging>
 
+  <prerequisites>
+    <maven>3.0</maven>
+  </prerequisites>
+
   <name>ZeroTurnaround JRebel Maven plugin</name>
   <description>ZeroTurnaround JRebel Maven plugin</description>
   <url>http://www.zeroturnaround.com/jrebel</url>
@@ -21,7 +25,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <min.maven.version>2.0.6</min.maven.version>
+    <min.maven.version>${project.prerequisites.maven}</min.maven.version>
   </properties>
 
   <scm>
@@ -128,7 +132,7 @@
   </build>
 
   <dependencies>
-      <dependency>
+    <dependency>
       <groupId>org.sonatype.plexus</groupId>
       <artifactId>plexus-build-api</artifactId>
       <version>0.0.7</version>
@@ -140,18 +144,13 @@
     </dependency>
     <dependency>
       <groupId>org.apache.maven</groupId>
+      <artifactId>maven-core</artifactId>
+      <version>${min.maven.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven</groupId>
       <artifactId>maven-project</artifactId>
-      <version>${min.maven.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.maven</groupId>
-      <artifactId>maven-core</artifactId>
-      <version>${min.maven.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.maven</groupId>
-      <artifactId>maven-core</artifactId>
-      <version>${min.maven.version}</version>
+      <version>2.0.6</version>
     </dependency>
     <dependency>
       <groupId>commons-io</groupId>
