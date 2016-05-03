@@ -20,6 +20,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecution;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
@@ -192,6 +193,9 @@ public class GenerateRebelMojo extends AbstractMojo {
   /** @component */
   private BuildContext buildContext;
 
+  /** @parameter default-value="${mojoExecution}" */
+  private MojoExecution execution;
+  
   private String findResourceFolder(final boolean onlyExisting) {
     final List list = this.project.getBuild().getResources();
     String result = null;
@@ -237,7 +241,15 @@ public class GenerateRebelMojo extends AbstractMojo {
     return result;
   }
 
+  private void printWarningAboutPhase() {
+    if (this.execution!=null && "process-resources".equals(this.execution.getLifecyclePhase())) {
+      this.getLog().warn("WARNING! As of version 1.1.6, JRebel Maven plugin generates rebel.xml file to source folder. To support this properly, please change your POM and set the <phase> for JRebel Maven plugin to \"generate-resources\".");
+    }
+  }
+  
   public void execute() throws MojoExecutionException, MojoFailureException {
+    printWarningAboutPhase();
+    
     // do not generate rebel.xml file if skip parameter or 'performRelease' system property is set to true
     try {
       if (this.skip || Boolean.getBoolean("performRelease")) {
