@@ -196,7 +196,7 @@ public class GenerateRebelMojo extends AbstractMojo {
   /** @parameter default-value="${mojoExecution}" */
   private MojoExecution execution;
   
-  private String findResourceFolder(final boolean onlyExisting) {
+  private String findFirstExistResourceFolder() {
     final List list = this.project.getBuild().getResources();
     String result = null;
     if (!list.isEmpty()) {
@@ -204,7 +204,6 @@ public class GenerateRebelMojo extends AbstractMojo {
         final Resource resource = (Resource) r;
         if (resource != null && resource.getDirectory() != null && resource.getDirectory().length() > 0) {
           result = FilenameUtils.normalize(resource.getDirectory());
-          if (onlyExisting) {
             if (!new File(result).isDirectory()) {
               // don't make so big change in user's project as creating a folder in project
               getLog().debug("Ignoring resource folder " + result + " because it doesn't exist");
@@ -212,11 +211,19 @@ public class GenerateRebelMojo extends AbstractMojo {
             } else {
               break;
             }
-          } else {
-            break;
-          }
         }
       }
+    }
+    return result;
+  }
+  
+  private String findResourceFolder(final boolean onlyExisting) {
+    final String existResourceFolder = findFirstExistResourceFolder();
+    if (existResourceFolder !=null) return existResourceFolder;
+    String result = null;
+    if (!onlyExisting){
+      final List list = this.project.getBuild().getResources();
+      result = ((Resource) list.get(0)).getDirectory();
     }
     return result;
   }
