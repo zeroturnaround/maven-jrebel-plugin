@@ -20,6 +20,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecution;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
@@ -192,7 +193,10 @@ public class GenerateRebelMojo extends AbstractMojo {
   /** @component */
   private BuildContext buildContext;
 
-  private String findResourceFolder(final boolean onlyExisting) {
+  /** @parameter default-value="${mojoExecution}" */
+  private MojoExecution execution;
+  
+  private String findFirstExistResourceFolder() {
     final List list = this.project.getBuild().getResources();
     String result = null;
     if (!list.isEmpty()) {
@@ -200,7 +204,6 @@ public class GenerateRebelMojo extends AbstractMojo {
         final Resource resource = (Resource) r;
         if (resource != null && resource.getDirectory() != null && resource.getDirectory().length() > 0) {
           result = FilenameUtils.normalize(resource.getDirectory());
-          if (onlyExisting) {
             if (!new File(result).isDirectory()) {
               // don't make so big change in user's project as creating a folder in project
               getLog().debug("Ignoring resource folder " + result + " because it doesn't exist");
@@ -208,11 +211,19 @@ public class GenerateRebelMojo extends AbstractMojo {
             } else {
               break;
             }
-          } else {
-            break;
-          }
         }
       }
+    }
+    return result;
+  }
+  
+  private String findResourceFolder(final boolean onlyExisting) {
+    final String existResourceFolder = findFirstExistResourceFolder();
+    if (existResourceFolder !=null) return existResourceFolder;
+    String result = null;
+    if (!onlyExisting){
+      final List list = this.project.getBuild().getResources();
+      result = ((Resource) list.get(0)).getDirectory();
     }
     return result;
   }
@@ -237,7 +248,15 @@ public class GenerateRebelMojo extends AbstractMojo {
     return result;
   }
 
+  private void printWarningAboutPhase() {
+    if (this.execution!=null && "process-resources".equals(this.execution.getLifecyclePhase())) {
+      this.getLog().warn("WARNING! As of version 1.1.6, JRebel Maven plugin generates rebel.xml file to source folder. To support this properly, please change your POM and set the <phase> for JRebel Maven plugin to \"generate-resources\".");
+    }
+  }
+  
   public void execute() throws MojoExecutionException, MojoFailureException {
+    printWarningAboutPhase();
+    
     // do not generate rebel.xml file if skip parameter or 'performRelease' system property is set to true
     try {
       if (this.skip || Boolean.getBoolean("performRelease")) {
