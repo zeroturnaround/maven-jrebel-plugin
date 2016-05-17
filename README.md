@@ -18,6 +18,7 @@ Add the following snippet to the **pom.xml** of your Maven project to generate t
   <executions>
     <execution>
       <id>generate-rebel-xml</id>
+      <phase>process-resources</phase>
       <goals>
         <goal>generate</goal>
       </goals>
@@ -26,4 +27,4 @@ Add the following snippet to the **pom.xml** of your Maven project to generate t
 </plugin>
 ```
 
-To manually execute the goal, run 'mvn jrebel:generate' and rebel.xml will be generated in the resources directory. 
+To manually execute the goal, run 'mvn jrebel:generate' and rebel.xml will be generated in the target directory.
