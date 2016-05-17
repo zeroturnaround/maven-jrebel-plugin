@@ -41,7 +41,7 @@ import org.zeroturnaround.javarebel.maven.model.RebelWebResource;
  * Generate rebel.xml
  *
  * @goal generate
- * @phase generate-resources
+ * @phase process-resources
  * @threadSafe true
  */
 public class GenerateRebelMojo extends AbstractMojo {
@@ -135,9 +135,10 @@ public class GenerateRebelMojo extends AbstractMojo {
   private String relativePath;
 
   /**
-   * Target directory for generated rebel.xml, if it is not defined then plugin will generate rebel.xml in first found resource folder.
+   * Target directory for generated rebel.xml
    *
-   * @parameter expression="${rebel.xml.dir}"
+   * @parameter expression="${rebel.xml.dir}" default-value="${project.build.outputDirectory}"
+   * @required
    */
   private File rebelXmlDirectory;
 
@@ -196,7 +197,7 @@ public class GenerateRebelMojo extends AbstractMojo {
   /** @parameter default-value="${mojoExecution}" */
   private MojoExecution execution;
   
-  private String findFirstExistResourceFolder() {
+  private String findResourceFolder() {
     final List list = this.project.getBuild().getResources();
     String result = null;
     if (!list.isEmpty()) {
@@ -204,48 +205,35 @@ public class GenerateRebelMojo extends AbstractMojo {
         final Resource resource = (Resource) r;
         if (resource != null && resource.getDirectory() != null && resource.getDirectory().length() > 0) {
           result = FilenameUtils.normalize(resource.getDirectory());
-            if (!new File(result).isDirectory()) {
-              // don't make so big change in user's project as creating a folder in project
-              getLog().debug("Ignoring resource folder " + result + " because it doesn't exist");
-              result = null;
-            } else {
-              break;
-            }
+          if (!new File(result).isDirectory()) {
+            // don't make so big change in user's project as creating a folder in project
+            getLog().debug("Ignoring resource folder " + result + " because it doesn't exist");
+            result = null;
+          } else {
+            break;
+          }
         }
       }
     }
     return result;
   }
-  
-  private String findResourceFolder(final boolean onlyExisting) {
-    final String existResourceFolder = findFirstExistResourceFolder();
-    if (existResourceFolder !=null) return existResourceFolder;
-    String result = null;
-    if (!onlyExisting){
-      final List list = this.project.getBuild().getResources();
-      result = ((Resource) list.get(0)).getDirectory();
-    }
-    return result;
-  }
 
   private File findFolderForRebelXml() throws MojoFailureException {
-    final String foundResourceFolder = findResourceFolder(false);
-    
-    getLog().debug("Detected resource folder : " + foundResourceFolder);
-
-    File result;
-    if (this.rebelXmlDirectory == null) {
-      getLog().debug("rebelXmlDirectory is null");
-      if (foundResourceFolder == null) {
-        result = new File(this.project.getBuild().getOutputDirectory());
-      } else {
-        result = new File(foundResourceFolder);
-      }
-    } else {
+    //If user configured jrebel plugin output dir, use it
+    if (this.rebelXmlDirectory != null) {
       getLog().debug("rebelXmlDirectory is " + this.rebelXmlDirectory);
-      result = this.rebelXmlDirectory;
+      return this.rebelXmlDirectory;
     }
-    return result;
+    //If POM has configured resource folder, use it
+    final String foundResourceFolder = findResourceFolder();
+    if (foundResourceFolder != null) {
+      getLog().debug("Detected resource folder : " + foundResourceFolder);
+      return new File(foundResourceFolder);
+    }
+    //Default to output directory (target)
+    String target = this.project.getBuild().getOutputDirectory();
+    getLog().debug("Using target directory : " + target);
+    return new File(target);
   }
 
   private void printWarningAboutPhase() {
@@ -255,7 +243,7 @@ public class GenerateRebelMojo extends AbstractMojo {
   }
   
   public void execute() throws MojoExecutionException, MojoFailureException {
-    printWarningAboutPhase();
+    //printWarningAboutPhase();
     
     // do not generate rebel.xml file if skip parameter or 'performRelease' system property is set to true
     try {
@@ -272,10 +260,10 @@ public class GenerateRebelMojo extends AbstractMojo {
       this.generateDefaultWeb = false;
     }
 
-    final File rebelXmlTargetFolder = findFolderForRebelXml();
-    getLog().info("Folder for rebel.xml : " + rebelXmlTargetFolder);
+    //final File rebelXmlTargetFolder = findFolderForRebelXml();
+    //getLog().info("Folder for rebel.xml : " + rebelXmlTargetFolder);
 
-    final File rebelXmlFile = new File(rebelXmlTargetFolder, "rebel.xml").getAbsoluteFile();
+    final File rebelXmlFile = new File(rebelXmlDirectory, "rebel.xml").getAbsoluteFile();
     final File pomXmlFile = getProject().getFile();
     if (!alwaysGenerate && rebelXmlFile.exists() && pomXmlFile.exists() && rebelXmlFile.lastModified() > pomXmlFile.lastModified()) {
       return;
@@ -305,9 +293,7 @@ public class GenerateRebelMojo extends AbstractMojo {
       }
 
       try {
-        if (!rebelXmlTargetFolder.exists() && !rebelXmlTargetFolder.mkdirs()) {
-          throw new MojoFailureException("Can't make folder for rebel.xml : " + rebelXmlTargetFolder);
-        }
+        rebelXmlDirectory.mkdirs();
         w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(rebelXmlFile), "UTF-8"));
         builder.writeXml(w);
       } catch (IOException e) {
@@ -756,7 +742,7 @@ public class GenerateRebelMojo extends AbstractMojo {
    * @param defaultValue the default value if the configuration was not found
    * @return the value of the option configured in the plugin configuration
    */
-  private static String getPluginSetting(MavenProject project, String pluginId, String optionName, String defaultValue) {
+  private String getPluginSetting(MavenProject project, String pluginId, String optionName, String defaultValue) {
     Xpp3Dom dom = getPluginConfigurationDom(project, pluginId);
     if (dom != null && dom.getChild(optionName) != null) {
       return getValue(project, dom.getChild(optionName));
@@ -764,13 +750,13 @@ public class GenerateRebelMojo extends AbstractMojo {
     return defaultValue;
   }
 
-  private static String getValue(MavenProject project, Xpp3Dom dom) {
+  private String getValue(MavenProject project, Xpp3Dom dom) {
     String value = dom.getValue();
 
     return getValue(project, value);
   }
 
-  private static String getValue(MavenProject project, String value) {
+  private String getValue(MavenProject project, String value) {
     if (value != null && value.contains("$")) {
       return getInterpolatorValue(project, value);
     }
@@ -785,13 +771,14 @@ public class GenerateRebelMojo extends AbstractMojo {
    * @param value
    * @return
    */
-  private static String getInterpolatorValue(MavenProject project, String value) {
+  private String getInterpolatorValue(MavenProject project, String value) {
     RegexBasedInterpolator interpolator = new RegexBasedInterpolator();
     interpolator.addValueSource(new ObjectBasedValueSource(project));
 
     try {
       return interpolator.interpolate(value, "project");
     } catch (Exception e) {
+      getLog().debug("Detected exception during 'getInterpolatorValue' : ", e);
       e.printStackTrace();
     }
     return value;
@@ -804,7 +791,7 @@ public class GenerateRebelMojo extends AbstractMojo {
   /**
    * Returns path expressed through rootPath & relativePath.
    *
-   * @param path
+   * @param file to be fixed
    * @return fixed path
    * @throws MojoExecutionException
    */
