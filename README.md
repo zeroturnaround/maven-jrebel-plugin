@@ -1,7 +1,8 @@
 JRebel Maven plugin
 -------------------
 
-This plugin is used to generate the **rebel.xml** configuration file for JRebel. Requires Maven 3.0 or newer. Please use JRebel Maven plugin 1.1.5 for Maven 2.x.
+This plugin is used to generate the **rebel.xml** configuration file for JRebel.
+Requires Maven 3.0 or newer (use JRebel Maven plugin version 1.1.5 for Maven 2.x projects).
 
 For more information, please refer to JRebel documentation at: **https://manuals.zeroturnaround.com/jrebel/standalone/maven.html** 
 
