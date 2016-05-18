@@ -678,8 +678,8 @@ public class GenerateRebelMojo extends AbstractMojo {
   /**
    * Parse resouce node content.
    *
-   * @param rn
-   * @return
+   * @param rn resource node content
+   * @return resource parsed
    */
   private Resource parseResourceNode(Xpp3Dom rn) {
     Resource r = new Resource();
@@ -789,11 +789,11 @@ public class GenerateRebelMojo extends AbstractMojo {
   }
 
   /**
-   * Returns path expressed through rootPath & relativePath.
+   * Returns path expressed through rootPath and relativePath.
    *
    * @param file to be fixed
    * @return fixed path
-   * @throws MojoExecutionException
+   * @throws MojoExecutionException if something goes wrong
    */
   protected String fixFilePath(File file) throws MojoExecutionException {
     File baseDir = getProject().getFile().getParentFile();
