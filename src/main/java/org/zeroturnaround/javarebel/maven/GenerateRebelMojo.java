@@ -10,9 +10,11 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.io.FilenameUtils;
@@ -30,6 +32,7 @@ import org.codehaus.plexus.util.interpolation.ObjectBasedValueSource;
 import org.codehaus.plexus.util.interpolation.RegexBasedInterpolator;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.sonatype.plexus.build.incremental.BuildContext;
+import org.zeroturnaround.javarebel.maven.model.PackagingTypeMapping;
 import org.zeroturnaround.javarebel.maven.model.RebelClasspath;
 import org.zeroturnaround.javarebel.maven.model.RebelClasspathResource;
 import org.zeroturnaround.javarebel.maven.model.RebelResource;
@@ -72,6 +75,13 @@ public class GenerateRebelMojo extends AbstractMojo {
    * @required
    */
   private String packaging;
+
+  /**
+   * Packaging type mappings to apply.
+   * 
+   * @parameter
+   */
+  private List<PackagingTypeMapping> packagingTypeMappings;
 
   /**
    * The directory containing generated classes.
@@ -271,13 +281,22 @@ public class GenerateRebelMojo extends AbstractMojo {
 
     getLog().info("Processing " + getProject().getGroupId() + ":" + getProject().getArtifactId() + " with packaging " + packaging);
 
+    Map<String, String> processedPackagingTypeMappings = processPackagingTypeMappings();
+    String mappedPackaging = processedPackagingTypeMappings.get(packaging);
+    if (mappedPackaging == null) {
+      mappedPackaging = packaging;
+    } else {
+      getLog().debug("Mapped packaging type " + packaging + " to type " + mappedPackaging);
+    }
+
     RebelXmlBuilder builder = null;
-    if (WAR_PACKAGING.contains(packaging)) {
+    if (WAR_PACKAGING.contains(mappedPackaging)) {
       builder = buildWar();
-    } else if (JAR_PACKAGING.contains(packaging)) {
+    } else if (JAR_PACKAGING.contains(mappedPackaging)) {
       builder = buildJar();
     } else {
-      getLog().warn("Unsupported packaging type: " + packaging);
+      // the mapping logic guarantees that (packaging == mappedPackaging) if this statement is reached
+      getLog().warn("Unsupported packaging type: " + mappedPackaging);
     }
 
     if (builder != null) {
@@ -306,6 +325,34 @@ public class GenerateRebelMojo extends AbstractMojo {
         }
       }
     }
+  }
+
+  /**
+   * Process the packaging type mapping configuration. The values in the
+   * returned map are guaranteed to be supported by the plugin.
+   */
+  private Map<String, String> processPackagingTypeMappings() {
+    Set<String> allStandardPackagingTypes = new HashSet<String>();
+    allStandardPackagingTypes.addAll(JAR_PACKAGING);
+    allStandardPackagingTypes.addAll(WAR_PACKAGING);
+
+    Map<String, String> processedPackagingTypeMappings = new HashMap<String, String>();
+    for (PackagingTypeMapping packagingTypeMapping : packagingTypeMappings) {
+      String type = packagingTypeMapping.getType();
+      String mapping = packagingTypeMapping.getMapping();
+
+      if (allStandardPackagingTypes.contains(mapping)) {
+        String existingMapping = processedPackagingTypeMappings.get(type);
+        if (existingMapping == null) {
+          processedPackagingTypeMappings.put(type, mapping);
+        } else {
+          getLog().warn("Packaging type " + type + " is already mapped to type " + existingMapping + "; ignoring conflicting mapping: " + type + " -> " + mapping);
+        }
+      } else {
+        getLog().warn("Ignoring packaging type mapping with unsupported target type: " + type + " -> " + mapping);
+      }
+    }
+    return processedPackagingTypeMappings;
   }
 
   /**
