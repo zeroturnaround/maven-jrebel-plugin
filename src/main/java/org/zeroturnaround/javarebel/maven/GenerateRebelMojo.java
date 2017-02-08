@@ -51,6 +51,7 @@ public class GenerateRebelMojo extends AbstractMojo {
 
   private static final Set JAR_PACKAGING = new HashSet();
   private static final Set WAR_PACKAGING = new HashSet();
+  public static final String CHARSET_NAME = "UTF-8";
 
   static {
     JAR_PACKAGING.addAll(Arrays.asList(new String[]{"jar", "ejb", "ejb3", "nbm", "hk2-jar", "bundle", "eclipse-plugin", "atlassian-plugin"}));
@@ -302,7 +303,7 @@ public class GenerateRebelMojo extends AbstractMojo {
 
       try {
         rebelXmlDirectory.mkdirs();
-        w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(rebelXmlFile), "UTF-8"));
+        w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(rebelXmlFile), CHARSET_NAME));
         builder.writeXml(w);
 
       } catch (IOException e) {
@@ -344,7 +345,7 @@ public class GenerateRebelMojo extends AbstractMojo {
 
     try {
       rebelXmlDirectory.mkdirs();
-      w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(rebelRemoteXmlFile), "UTF-8"));
+      w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(rebelRemoteXmlFile), CHARSET_NAME));
       generateRebelRemoteXml(w);
 
     } catch (IOException e) {
@@ -365,7 +366,7 @@ public class GenerateRebelMojo extends AbstractMojo {
    */
   private void generateRebelRemoteXml(Writer w) throws IOException {
 
-    String moduleId = URLEncoder.encode( getProject().getArtifactId(), "UTF-8").replaceAll("\\.", "_2E");
+    String moduleId = URLEncoder.encode( getProject().getArtifactId(), CHARSET_NAME).replaceAll("\\.", "_2E");
 
     w.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
             "<rebel-remote xmlns=\"http://www.zeroturnaround.com/rebel/remote\">\n" +
