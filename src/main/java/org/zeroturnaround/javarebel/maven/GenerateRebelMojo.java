@@ -328,12 +328,7 @@ public class GenerateRebelMojo extends AbstractMojo {
    */
   private void generateRebelRemoteXmlFile() throws MojoExecutionException {
 
-    File rebelRemoteXmlFile;
-    if( generateRebelRemote) {
-      rebelRemoteXmlFile = new File(rebelXmlDirectory, "rebel-remote.xml").getAbsoluteFile();
-    } else {
-      rebelRemoteXmlFile = null;
-    }
+    File rebelRemoteXmlFile = new File(rebelXmlDirectory, "rebel-remote.xml").getAbsoluteFile();
     getLog().info("Generating rebel-remote.xml on : " + rebelRemoteXmlFile.getAbsolutePath());
 
     Writer w = null;
