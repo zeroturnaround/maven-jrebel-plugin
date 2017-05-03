@@ -129,8 +129,7 @@ public class GenerateRebelMojo extends AbstractMojo {
   /**
    * Relative path to root of current project.
    *
-   * @parameter default-value="."
-   * @required
+   * @parameter
    */
   private String relativePath;
 
@@ -243,6 +242,18 @@ public class GenerateRebelMojo extends AbstractMojo {
   }
   
   public void execute() throws MojoExecutionException, MojoFailureException {
+    if (this.relativePath == null) {
+      try{
+        this.relativePath = makePathPrefixToMainFolder(findBaseDirOfMainProject(), this.project.getBasedir());
+        if (!".".equals(relativePath)){
+          getLog().info("auto-detected relative path to main project : " + this.relativePath);
+        }
+      }catch(IOException ex){
+        getLog().debug("Error during relative path calculation",ex);
+        throw new MojoFailureException("Can't calculate relative path from module to main project, it must be defined exlpicitly through <relativePath> parameter");
+      }
+    }
+
     //printWarningAboutPhase();
     
     // do not generate rebel.xml file if skip parameter or 'performRelease' system property is set to true
@@ -894,4 +905,39 @@ public class GenerateRebelMojo extends AbstractMojo {
     return rootPath;
   }
 
+  static String makePathPrefixToMainFolder(File mainFolder, File folder) throws IOException {
+    String result = ".";
+
+    if (!folder.equals(mainFolder)) {
+      String normalizedbase = FilenameUtils.normalizeNoEndSeparator(folder.getCanonicalPath());
+      String normalizedmain = FilenameUtils.normalizeNoEndSeparator(mainFolder.getCanonicalPath());
+
+      if (normalizedmain.length() > normalizedbase.length()) {
+        throw new IOException("Can't find main project folder, module folder = " + normalizedbase + ", calculated main folder = " + normalizedmain);
+      }
+
+      String diff = normalizedbase.substring(normalizedmain.length());
+      if (diff.length()  != 0) {
+        StringBuilder buffer = new StringBuilder();
+        for (char c : diff.toCharArray()) {
+          if (c == '/' || c == '\\') {
+            buffer.append("..").append(File.separatorChar);
+          }
+        }
+
+        result = buffer.toString();
+      }
+    }
+
+    return result;
+  }
+  
+  private File findBaseDirOfMainProject() {
+    MavenProject current = this.project;
+    while(current.hasParent()){
+      current = current.getParent();
+    }
+    return current.getBasedir();
+  }
+  
 }
