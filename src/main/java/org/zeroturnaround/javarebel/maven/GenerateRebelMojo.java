@@ -908,7 +908,7 @@ public class GenerateRebelMojo extends AbstractMojo {
   static String makePathPrefixToMainFolder(File mainFolder, File folder) throws IOException {
     String result = ".";
 
-    if (!folder.equals(mainFolder)) {
+    if (mainFolder!=null && !folder.equals(mainFolder)) {
       String normalizedbase = FilenameUtils.normalizeNoEndSeparator(folder.getCanonicalPath());
       String normalizedmain = FilenameUtils.normalizeNoEndSeparator(mainFolder.getCanonicalPath());
 
