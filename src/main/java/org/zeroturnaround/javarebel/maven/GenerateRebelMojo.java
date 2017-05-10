@@ -905,7 +905,7 @@ public class GenerateRebelMojo extends AbstractMojo {
     return rootPath;
   }
 
-  static String makePathPrefixToMainFolder(File mainFolder, File folder) throws IOException {
+  String makePathPrefixToMainFolder(File mainFolder, File folder) throws IOException {
     String result = ".";
 
     if (mainFolder!=null && !folder.equals(mainFolder)) {
