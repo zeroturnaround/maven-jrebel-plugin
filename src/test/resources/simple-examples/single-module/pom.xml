@@ -28,7 +28,7 @@
         <configuration>
           <rootRelativePath>..</rootRelativePath>
           <relativePath>../../</relativePath>
-          <rootPath>$${workspace.root}</rootPath>
+          <rootPath>${workspace.root}</rootPath>
         </configuration>
       </plugin>
     </plugins>
