@@ -121,8 +121,7 @@ public class GenerateRebelMojo extends AbstractMojo {
   /**
    * Root path of maven projects.
    *
-   * @parameter default-value="${basedir}"
-   * @required
+   * @parameter
    */
   private String rootPath;
 
@@ -132,6 +131,13 @@ public class GenerateRebelMojo extends AbstractMojo {
    * @parameter
    */
   private String relativePath;
+
+  /**
+   * Root relative path.
+   *
+   * @parameter
+   */
+  private String rootRelativePath;
 
   /**
    * Target directory for generated rebel.xml
@@ -242,16 +248,39 @@ public class GenerateRebelMojo extends AbstractMojo {
   }
   
   public void execute() throws MojoExecutionException, MojoFailureException {
-    if (this.relativePath == null) {
-      try{
-        this.relativePath = makePathPrefixToMainFolder(findBaseDirOfMainProject(), this.project.getBasedir());
-        if (!".".equals(relativePath)){
-          getLog().info("auto-detected relative path to main project : " + this.relativePath);
+    if (this.rootPath == null) {
+
+      // relative paths generation is OFF
+      this.rootPath = project.getBasedir().getAbsolutePath();
+      this.relativePath = ".";
+
+    } else {
+
+      if (this.rootRelativePath == null) {
+
+        // manual config mode
+        if (this.relativePath == null) {
+          // have <relativePath> point up to maven root directory
+          this.relativePath = ".";
         }
-      }catch(IOException ex){
-        getLog().debug("Error during relative path calculation",ex);
-        getLog().info("Can't calculate relative path from module to main project, it must be defined explicitly through <relativePath> parameter");
+
+
+      } else {
+        // use auto-detection
+        // ignore all <relativePath> variables
+
+        try{
+          this.relativePath = makePathPrefixToMainFolder(findBaseDirOfMainProject(), this.project.getBasedir());
+          if (!".".equals(relativePath)){
+            getLog().info("auto-detected relative path to main project : " + this.relativePath);
+          }
+        }catch(IOException ex){
+          getLog().debug("Error during relative path calculation",ex);
+          getLog().info("Can't calculate relative path from module to main project, it must be defined explicitly through <relativePath> parameter");
+        }
+
       }
+
     }
 
     //printWarningAboutPhase();
