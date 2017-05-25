@@ -270,6 +270,7 @@ public class GenerateRebelMojo extends AbstractMojo {
         // ignore all <relativePath> variables
 
         try{
+
           this.relativePath = makePathPrefixToMainFolder(findBaseDirOfMainProject(), this.project.getBasedir());
           if (!".".equals(relativePath)){
             getLog().info("auto-detected relative path to main project : " + this.relativePath);
