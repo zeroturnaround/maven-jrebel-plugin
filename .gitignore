@@ -2,5 +2,3 @@
 /nbproject/
 .idea
 *.iml
-/jr-maven-tests/JavaSimpleApplication/target/
-/jr-maven-tests/java-simple-app/target/
