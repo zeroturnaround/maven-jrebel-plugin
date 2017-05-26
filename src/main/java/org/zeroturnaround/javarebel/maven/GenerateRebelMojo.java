@@ -966,11 +966,12 @@ public class GenerateRebelMojo extends AbstractMojo {
         result = buffer.toString();
       }
     }
-
+    getLog().debug("root:" + root + " folder:" + folder + " result:" + result);
     return result;
   }
 
   String calculateRelativePath(String relativePathToRoot, String rootRelativePath) throws IOException {
+    getLog().debug("relativePathToRoot:" + relativePathToRoot + " rootRelativePath:" + rootRelativePath);
     if (relativePathToRoot == ".") {
       if (rootRelativePath == ".") {
         return ".";
@@ -988,9 +989,10 @@ public class GenerateRebelMojo extends AbstractMojo {
   
   private File findBaseDirOfMainProject() {
     MavenProject current = this.project;
-    while (current.hasParent()) {
+    while (current.hasParent() && current.getParent().getBasedir() != null) {
       current = current.getParent();
     }
+    getLog().debug("project:" + this.project + " baseDir:" + current.getBasedir());
     return current.getBasedir();
   }
 }
