@@ -284,6 +284,7 @@ public class GenerateRebelMojo extends AbstractMojo {
       }
     }
     catch (SecurityException ignore) {
+      // ignore exception which potentially can be thrown by Boolean.getBoolean for security options
     }
 
     // if generateDefaultElements is set to false, then disable default classpath and web elements no matter what are their initial values.
@@ -947,14 +948,14 @@ public class GenerateRebelMojo extends AbstractMojo {
     String result = ".";
 
     if (root != null && !folder.equals(root)) {
-      String normalizedbase = FilenameUtils.normalizeNoEndSeparator(folder.getCanonicalPath());
-      String normalizedmain = FilenameUtils.normalizeNoEndSeparator(root.getCanonicalPath());
+      String normalizedBase = FilenameUtils.normalizeNoEndSeparator(folder.getCanonicalPath());
+      String normalizedMain = FilenameUtils.normalizeNoEndSeparator(root.getCanonicalPath());
 
-      if (normalizedmain.length() > normalizedbase.length()) {
-        throw new IOException("Can't find main project folder, module folder = " + normalizedbase + ", calculated main folder = " + normalizedmain);
+      if (normalizedMain.length() > normalizedBase.length()) {
+        throw new IOException("Can't find main project folder, module folder = " + normalizedBase + ", calculated main folder = " + normalizedMain);
       }
 
-      String diff = normalizedbase.substring(normalizedmain.length());
+      String diff = normalizedBase.substring(normalizedMain.length());
       if (diff.length() != 0) {
         StringBuilder buffer = new StringBuilder();
         for (char c : diff.toCharArray()) {
