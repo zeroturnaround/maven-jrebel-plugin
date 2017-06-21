@@ -271,7 +271,7 @@ public class GenerateRebelMojo extends AbstractMojo {
         }
         catch (IOException ex) {
           getLog().debug("Error during relative path calculation", ex);
-          getLog().info("Can't calculate relative path from module to main project, it must be defined explicitly through <relativePath> parameter");
+          getLog().error("ERROR! Path defined in <rootRelativePath> is not a valid relative path with regard to root module's path. Falling back to absolute paths.");
         }
       }
     }
