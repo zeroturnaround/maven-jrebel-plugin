@@ -1,5 +1,6 @@
 package org.zeroturnaround.javarebel.maven.model;
 
+import java.io.File;
 import java.util.List;
 
 /**
@@ -14,6 +15,14 @@ public class RebelClasspathResource implements RebelResource {
 
   private List excludes;
   private List includes;
+
+  public boolean doesDirExistsOrNotAbsolute() {
+    File file = new File(directory);
+    if (file.isAbsolute()) {
+      return file.isDirectory();
+    }
+    return true;
+  }
 
   public String getDirectory() {
     return directory;

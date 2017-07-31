@@ -1,5 +1,6 @@
 package org.zeroturnaround.javarebel.maven.model;
 
+import java.io.File;
 import java.util.List;
 
 /**
@@ -16,6 +17,18 @@ public class RebelWebResource implements RebelResource {
   public String getTarget() {
     return target;
   }
+
+  public boolean doesDirExistsOrNotAbsolute() {
+    boolean result = true;
+
+    File file = new File(directory);
+    if (file.isAbsolute()) {
+      result = file.isDirectory();
+    }
+
+    return result;
+  }
+
 
   public void setTarget(String target) {
     this.target = target;
