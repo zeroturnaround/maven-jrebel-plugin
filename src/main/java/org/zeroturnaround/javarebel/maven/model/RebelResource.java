@@ -12,4 +12,10 @@ public interface RebelResource {
 
   void setExcludes(List excludes);
 
+  void setDirectory(String duirectory);
+
+  String getDirectory();
+
+  boolean doesDirExistsOrNotAbsolute();
+
 }

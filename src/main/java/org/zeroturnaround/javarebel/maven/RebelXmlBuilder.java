@@ -1,7 +1,6 @@
 package org.zeroturnaround.javarebel.maven;
 
 import java.io.IOException;
-
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -10,9 +9,9 @@ import java.util.List;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.zeroturnaround.javarebel.maven.model.RebelClasspathResource;
+import org.zeroturnaround.javarebel.maven.model.RebelResource;
 import org.zeroturnaround.javarebel.maven.model.RebelWar;
 import org.zeroturnaround.javarebel.maven.model.RebelWebResource;
-import org.zeroturnaround.javarebel.maven.model.RebelResource;
 
 /**
  * Class for constructing xml configuration.
@@ -60,9 +59,9 @@ class RebelXmlBuilder {
   public void writeXml(Writer writer) throws IOException {
     writer.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
     writer.write("\n<!--\n"
-        + "  This is the JRebel configuration file. It maps the running application to your IDE workspace, enabling JRebel reloading for this project.\n"
-        + "  Refer to https://manuals.zeroturnaround.com/jrebel/standalone/config.html for more information.\n" + "-->\n"
-        + "<application generated-by=\"maven\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://www.zeroturnaround.com\" xsi:schemaLocation=\"http://www.zeroturnaround.com http://update.zeroturnaround.com/jrebel/rebel-2_1.xsd\">\n");
+                 + "  This is the JRebel configuration file. It maps the running application to your IDE workspace, enabling JRebel reloading for this project.\n"
+                 + "  Refer to https://manuals.zeroturnaround.com/jrebel/standalone/config.html for more information.\n" + "-->\n"
+                 + "<application generated-by=\"maven\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://www.zeroturnaround.com\" xsi:schemaLocation=\"http://www.zeroturnaround.com http://update.zeroturnaround.com/jrebel/rebel-2_1.xsd\">\n");
     writer.write("\t<classpath");
     if (fallbackClasspath != null) {
       writer.write(" fallback=\"" + fallbackClasspath + "\"");
@@ -107,13 +106,15 @@ class RebelXmlBuilder {
 
     if (webResources.size() > 0) {
       writer.write("\t<web>\n");
-      for (Iterator i = webResources.iterator(); i.hasNext();) {
+      for (Iterator i = webResources.iterator(); i.hasNext(); ) {
         RebelWebResource r = (RebelWebResource) i.next();
-        writer.write("\t\t<link target=\"" + e(r.getTarget()) + "\">\n");
-        writer.write("\t\t\t<dir name=\"" + e(r.getDirectory())+ "\">\n");
-        writeExcludeInclude(writer, r);
-        writer.write("\t\t\t</dir>\n");
-        writer.write("\t\t</link>\n");
+        if (r.doesDirExistsOrNotAbsolute()) {
+          writer.write("\t\t<link target=\"" + e(r.getTarget()) + "\">\n");
+          writer.write("\t\t\t<dir name=\"" + e(r.getDirectory()) + "\">\n");
+          writeExcludeInclude(writer, r);
+          writer.write("\t\t\t</dir>\n");
+          writer.write("\t\t</link>\n");
+        }
       }
       writer.write("\t</web>\n");
       writer.write("\n");

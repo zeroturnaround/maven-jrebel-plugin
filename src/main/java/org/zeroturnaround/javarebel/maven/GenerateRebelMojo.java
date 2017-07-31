@@ -121,18 +121,23 @@ public class GenerateRebelMojo extends AbstractMojo {
   /**
    * Root path of maven projects.
    *
-   * @parameter default-value="${basedir}"
-   * @required
+   * @parameter
    */
   private String rootPath;
 
   /**
    * Relative path to root of current project.
    *
-   * @parameter default-value="."
-   * @required
+   * @parameter
    */
   private String relativePath;
+
+  /**
+   * Root relative path.
+   *
+   * @parameter
+   */
+  private String rootRelativePath;
 
   /**
    * Target directory for generated rebel.xml
@@ -196,7 +201,7 @@ public class GenerateRebelMojo extends AbstractMojo {
 
   /** @parameter default-value="${mojoExecution}" */
   private MojoExecution execution;
-  
+
   private String findResourceFolder() {
     final List list = this.project.getBuild().getResources();
     String result = null;
@@ -209,7 +214,8 @@ public class GenerateRebelMojo extends AbstractMojo {
             // don't make so big change in user's project as creating a folder in project
             getLog().debug("Ignoring resource folder " + result + " because it doesn't exist");
             result = null;
-          } else {
+          }
+          else {
             break;
           }
         }
@@ -237,21 +243,48 @@ public class GenerateRebelMojo extends AbstractMojo {
   }
 
   private void printWarningAboutPhase() {
-    if (this.execution!=null && "process-resources".equals(this.execution.getLifecyclePhase())) {
+    if (this.execution != null && "process-resources".equals(this.execution.getLifecyclePhase())) {
       this.getLog().warn("WARNING! As of version 1.1.6, JRebel Maven plugin generates rebel.xml file to source folder. To support this properly, please change your POM and set the <phase> for JRebel Maven plugin to \"generate-resources\".");
     }
   }
-  
+
   public void execute() throws MojoExecutionException, MojoFailureException {
-    //printWarningAboutPhase();
-    
+    if (this.rootPath == null) {
+      // relative paths generation is OFF
+      this.rootPath = project.getBasedir().getAbsolutePath();
+      this.relativePath = ".";
+
+    }
+    else {
+      if (this.rootRelativePath == null) {
+        // manual config mode
+        if (this.relativePath == null) {
+          // have <relativePath> point up to maven root directory
+          this.relativePath = ".";
+        }
+      }
+      else {
+        // use auto-detection & ignore all <relativePath> variables
+        try {
+          this.relativePath = calculateRelativePath(calculatePathToRoot(findBaseDirOfMainProject(), this.project.getBasedir()), rootRelativePath);
+          getLog().info("auto-detected relative path to main project : " + this.relativePath);
+        }
+        catch (IOException ex) {
+          getLog().debug("Error during relative path calculation", ex);
+          getLog().error("ERROR! Path defined in <rootRelativePath> is not a valid relative path with regard to root module's path. Falling back to absolute paths.");
+        }
+      }
+    }
+
     // do not generate rebel.xml file if skip parameter or 'performRelease' system property is set to true
     try {
       if (this.skip || Boolean.getBoolean("performRelease")) {
         getLog().info("Skipped generating rebel.xml.");
         return;
       }
-    } catch (SecurityException ignore) {
+    }
+    catch (SecurityException ignore) {
+      // ignore exception which potentially can be thrown by Boolean.getBoolean for security options
     }
 
     // if generateDefaultElements is set to false, then disable default classpath and web elements no matter what are their initial values.
@@ -274,9 +307,11 @@ public class GenerateRebelMojo extends AbstractMojo {
     RebelXmlBuilder builder = null;
     if (WAR_PACKAGING.contains(packaging)) {
       builder = buildWar();
-    } else if (JAR_PACKAGING.contains(packaging)) {
+    }
+    else if (JAR_PACKAGING.contains(packaging)) {
       builder = buildJar();
-    } else {
+    }
+    else {
       getLog().warn("Unsupported packaging type: " + packaging);
     }
 
@@ -287,8 +322,9 @@ public class GenerateRebelMojo extends AbstractMojo {
           w = new StringWriter();
           builder.writeXml(w);
           getLog().info(w.toString());
-        } catch (IOException e) {
-          getLog().debug("Detected exception during 'showGenerated' : ",e);
+        }
+        catch (IOException e) {
+          getLog().debug("Detected exception during 'showGenerated' : ", e);
         }
       }
 
@@ -296,9 +332,11 @@ public class GenerateRebelMojo extends AbstractMojo {
         rebelXmlDirectory.mkdirs();
         w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(rebelXmlFile), "UTF-8"));
         builder.writeXml(w);
-      } catch (IOException e) {
+      }
+      catch (IOException e) {
         throw new MojoExecutionException("Failed writing rebel.xml", e);
-      } finally {
+      }
+      finally {
         IOUtils.closeQuietly(w);
         if (this.buildContext != null) {
           // safeguard for null buildContext. Can it be null, actually? E.g when field is not injected.
@@ -392,7 +430,8 @@ public class GenerateRebelMojo extends AbstractMojo {
               r.setDirset(fixFilePath(r.getDirset()));
               builder.addClasspathDirset(r);
             }
-          } else {
+          }
+          else {
             buildDefaultClasspath(builder, r);
           }
         }
@@ -428,7 +467,7 @@ public class GenerateRebelMojo extends AbstractMojo {
     if (overwrite) {
       Collections.reverse(resources);
     }
-    for (Iterator i = resources.iterator(); i.hasNext();) {
+    for (Iterator i = resources.iterator(); i.hasNext(); ) {
       Resource resource = (Resource) i.next();
 
       File dir = new File(resource.getDirectory());
@@ -452,7 +491,8 @@ public class GenerateRebelMojo extends AbstractMojo {
         if (resource.getTargetPath() != null) {
           setIncludePrefix(rebelClassPathResource.getIncludes(), resource.getTargetPath());
         }
-      } else {
+      }
+      else {
         rebelClassPathResource.setDirectory(fixFilePath(resource.getDirectory()));
         rebelClassPathResource.setExcludes(resource.getExcludes());
         rebelClassPathResource.setIncludes(resource.getIncludes());
@@ -494,7 +534,8 @@ public class GenerateRebelMojo extends AbstractMojo {
         includedFiles.add(StringUtils.replace(file, '\\', '/'));
       }
       rebelResouce.setIncludes(includedFiles);
-    } else {
+    }
+    else {
       //there weren't any matching files
       return false;
     }
@@ -513,7 +554,8 @@ public class GenerateRebelMojo extends AbstractMojo {
     scanner.setBasedir(resource.getDirectory());
     if (resource.getIncludes() != null && !resource.getIncludes().isEmpty()) {
       scanner.setIncludes((String[]) resource.getIncludes().toArray(new String[resource.getIncludes().size()]));
-    } else {
+    }
+    else {
       scanner.setIncludes(DEFAULT_INCLUDES);
     }
     if (resource.getExcludes() != null && !resource.getExcludes().isEmpty()) {
@@ -586,7 +628,7 @@ public class GenerateRebelMojo extends AbstractMojo {
         //web resources overwrite each other
         Collections.reverse(resources);
 
-        for (Iterator i = resources.iterator(); i.hasNext();) {
+        for (Iterator i = resources.iterator(); i.hasNext(); ) {
           Resource resource = (Resource) i.next();
 
           File dir = new File(resource.getDirectory());
@@ -618,7 +660,8 @@ public class GenerateRebelMojo extends AbstractMojo {
                 if (StringUtils.isNotEmpty(target)) {
                   setIncludePrefix(rc.getIncludes(), target);
                 }
-              } else {
+              }
+              else {
                 rc.setDirectory(fixFilePath(resource.getDirectory()));
                 rc.setExcludes(resource.getExcludes());
                 rc.setIncludes(resource.getIncludes());
@@ -626,7 +669,8 @@ public class GenerateRebelMojo extends AbstractMojo {
 
               builder.addClasspathDir(rc);
             }
-          } else {
+          }
+          else {
             RebelWebResource r = new RebelWebResource();
             r.setTarget(resource.getTargetPath());
 
@@ -635,7 +679,8 @@ public class GenerateRebelMojo extends AbstractMojo {
               if (!handleResourceAsInclude(r, resource)) {
                 continue;
               }
-            } else {
+            }
+            else {
               r.setDirectory(fixFilePath(resource.getDirectory()));
               r.setExcludes(resource.getExcludes());
               r.setIncludes(resource.getIncludes());
@@ -720,7 +765,7 @@ public class GenerateRebelMojo extends AbstractMojo {
   /**
    * Taken from eclipse plugin. Search for the configuration Xpp3 dom of an other plugin.
    *
-   * @param project the current maven project to get the configuration from.
+   * @param project  the current maven project to get the configuration from.
    * @param pluginId the group id and artifact id of the plugin to search for
    * @return the value of the plugin configuration
    */
@@ -736,9 +781,9 @@ public class GenerateRebelMojo extends AbstractMojo {
   /**
    * Search for a configuration setting of an other plugin.
    *
-   * @param project the current maven project to get the configuration from.
-   * @param pluginId the group id and artifact id of the plugin to search for
-   * @param optionName the option to get from the configuration
+   * @param project      the current maven project to get the configuration from.
+   * @param pluginId     the group id and artifact id of the plugin to search for
+   * @param optionName   the option to get from the configuration
    * @param defaultValue the default value if the configuration was not found
    * @return the value of the option configured in the plugin configuration
    */
@@ -777,7 +822,8 @@ public class GenerateRebelMojo extends AbstractMojo {
 
     try {
       return interpolator.interpolate(value, "project");
-    } catch (Exception e) {
+    }
+    catch (Exception e) {
       getLog().debug("Detected exception during 'getInterpolatorValue' : ", e);
       e.printStackTrace();
     }
@@ -818,7 +864,8 @@ public class GenerateRebelMojo extends AbstractMojo {
 
       if (!(new File(s)).isAbsolute()) {
         return StringUtils.replace(getRootPath(), '\\', '/') + "/" + s;
-      } else {
+      }
+      else {
         // root path and the calculated path are absolute, so 
         // just return calculated path
         return s;
@@ -844,9 +891,11 @@ public class GenerateRebelMojo extends AbstractMojo {
 
     if (absolutePath.equals(basedirpath)) {
       relative = ".";
-    } else if (absolutePath.startsWith(basedirpath)) {
+    }
+    else if (absolutePath.startsWith(basedirpath)) {
       relative = absolutePath.substring(basedirpath.length());
-    } else {
+    }
+    else {
       relative = absolutePath;
     }
 
@@ -865,7 +914,8 @@ public class GenerateRebelMojo extends AbstractMojo {
   private static String getCanonicalPath(File file) throws MojoExecutionException {
     try {
       return file.getCanonicalPath();
-    } catch (IOException e) {
+    }
+    catch (IOException e) {
       throw new MojoExecutionException("Failed to get canonical path of " + file.getAbsolutePath(), e);
     }
   }
@@ -894,4 +944,56 @@ public class GenerateRebelMojo extends AbstractMojo {
     return rootPath;
   }
 
+  String calculatePathToRoot(File root, File folder) throws IOException {
+    String result = ".";
+
+    if (root != null && !folder.equals(root)) {
+      String normalizedBase = FilenameUtils.normalizeNoEndSeparator(folder.getCanonicalPath());
+      String normalizedMain = FilenameUtils.normalizeNoEndSeparator(root.getCanonicalPath());
+
+      if (normalizedMain.length() > normalizedBase.length()) {
+        throw new IOException("Can't find main project folder, module folder = " + normalizedBase + ", calculated main folder = " + normalizedMain);
+      }
+
+      String diff = normalizedBase.substring(normalizedMain.length());
+      if (diff.length() != 0) {
+        StringBuilder buffer = new StringBuilder();
+        for (char c : diff.toCharArray()) {
+          if (c == '/' || c == '\\') {
+            buffer.append("..").append(File.separatorChar);
+          }
+        }
+
+        result = buffer.toString();
+      }
+    }
+    getLog().debug("root:" + root + " folder:" + folder + " result:" + result);
+    return result;
+  }
+
+  String calculateRelativePath(String relativePathToRoot, String rootRelativePath) throws IOException {
+    getLog().debug("relativePathToRoot:" + relativePathToRoot + " rootRelativePath:" + rootRelativePath);
+    if (relativePathToRoot == ".") {
+      if (rootRelativePath == ".") {
+        return ".";
+      }
+      else {
+        return rootRelativePath;
+      }
+    }
+    else if (rootRelativePath == ".") {
+      return relativePathToRoot;
+    }
+
+    return relativePathToRoot + rootRelativePath;
+  }
+  
+  private File findBaseDirOfMainProject() {
+    MavenProject current = this.project;
+    while (current.hasParent() && current.getParent().getBasedir() != null) {
+      current = current.getParent();
+    }
+    getLog().debug("project:" + this.project + " baseDir:" + current.getBasedir());
+    return current.getBasedir();
+  }
 }

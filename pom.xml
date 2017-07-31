@@ -4,7 +4,7 @@
 
   <groupId>org.zeroturnaround</groupId>
   <artifactId>jrebel-maven-plugin</artifactId>
-  <version>1.1.7</version>
+  <version>1.1.8-SNAPSHOT</version>
   <packaging>maven-plugin</packaging>
 
   <prerequisites>
@@ -58,6 +58,37 @@
     </developer>
   </developers>
 
+  <profiles>
+    <profile>
+      <id>publish</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-release-plugin</artifactId>
+            <version>2.4.1</version>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
   <build>
     <extensions>
       <extension>
@@ -106,24 +137,6 @@
             </goals>
           </execution>
         </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-gpg-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>sign-artifacts</id>
-            <phase>verify</phase>
-            <goals>
-              <goal>sign</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-release-plugin</artifactId>
-        <version>2.4.1</version>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -195,7 +208,7 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>4.9</version>
+      <version>4.12</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
