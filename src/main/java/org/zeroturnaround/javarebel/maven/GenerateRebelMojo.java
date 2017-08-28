@@ -17,6 +17,7 @@ import java.util.Set;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.AbstractMojo;
@@ -202,6 +203,9 @@ public class GenerateRebelMojo extends AbstractMojo {
   /** @parameter default-value="${mojoExecution}" */
   private MojoExecution execution;
 
+  /** @parameter default-value="${session}" */
+  private MavenSession session;
+
   private String findResourceFolder() {
     final List list = this.project.getBuild().getResources();
     String result = null;
@@ -353,7 +357,7 @@ public class GenerateRebelMojo extends AbstractMojo {
    * @throws MojoExecutionException
    */
   private RebelXmlBuilder buildWar() throws MojoExecutionException {
-    RebelXmlBuilder builder = new RebelXmlBuilder();
+    RebelXmlBuilder builder = new RebelXmlBuilder(session.getSystemProperties().getProperty("maven.version"), execution.getVersion());
 
     buildWeb(builder);
     buildClasspath(builder);
@@ -373,7 +377,7 @@ public class GenerateRebelMojo extends AbstractMojo {
    * @throws MojoExecutionException
    */
   private RebelXmlBuilder buildJar() throws MojoExecutionException {
-    RebelXmlBuilder builder = new RebelXmlBuilder();
+    RebelXmlBuilder builder = new RebelXmlBuilder(session.getSystemProperties().getProperty("maven.version"), execution.getVersion());
     buildClasspath(builder);
 
     // if user has specified any web elements, then let's generate these in the result file.
