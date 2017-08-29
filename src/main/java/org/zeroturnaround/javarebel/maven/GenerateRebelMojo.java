@@ -357,7 +357,7 @@ public class GenerateRebelMojo extends AbstractMojo {
    * @throws MojoExecutionException
    */
   private RebelXmlBuilder buildWar() throws MojoExecutionException {
-    RebelXmlBuilder builder = new RebelXmlBuilder(session.getSystemProperties().getProperty("maven.version"), execution.getVersion());
+    RebelXmlBuilder builder = createXmlBuilder();
 
     buildWeb(builder);
     buildClasspath(builder);
@@ -377,7 +377,7 @@ public class GenerateRebelMojo extends AbstractMojo {
    * @throws MojoExecutionException
    */
   private RebelXmlBuilder buildJar() throws MojoExecutionException {
-    RebelXmlBuilder builder = new RebelXmlBuilder(session.getSystemProperties().getProperty("maven.version"), execution.getVersion());
+    RebelXmlBuilder builder = createXmlBuilder();
     buildClasspath(builder);
 
     // if user has specified any web elements, then let's generate these in the result file.
@@ -387,6 +387,15 @@ public class GenerateRebelMojo extends AbstractMojo {
     }
 
     return builder;
+  }
+
+  /**
+   * Create a new instance of RebelXmlBuilder with the version of maven and JRebel plugin used during build
+   *
+   * @return new instance of RebelXmlBuilder
+   */
+  private RebelXmlBuilder createXmlBuilder() {
+    return new RebelXmlBuilder(session.getSystemProperties().getProperty("maven.version"), execution.getVersion());
   }
 
   private void buildClasspath(RebelXmlBuilder builder) throws MojoExecutionException {

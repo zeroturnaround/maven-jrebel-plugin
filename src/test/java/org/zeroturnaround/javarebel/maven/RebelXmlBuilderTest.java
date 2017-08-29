@@ -1,5 +1,6 @@
 package org.zeroturnaround.javarebel.maven;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.*;
 
 import java.io.StringWriter;
@@ -11,7 +12,7 @@ public class RebelXmlBuilderTest {
     RebelXmlBuilder builder = new RebelXmlBuilder(null, null);
     StringWriter result = new StringWriter();
     builder.writeXml(result);
-    assertTrue(result.toString().contains("generated-by=\"maven\""));
+    assertThat(result.toString(), containsString("generated-by=\"maven\""));
   }
 
   @Test
@@ -19,7 +20,7 @@ public class RebelXmlBuilderTest {
     RebelXmlBuilder builder = new RebelXmlBuilder("3.0.0", "1.0.8");
     StringWriter result = new StringWriter();
     builder.writeXml(result);
-    assertTrue(result.toString().contains("build-tool-version=\"3.0.0\""));
+    assertThat(result.toString(), containsString("build-tool-version=\"3.0.0\""));
   }
 
   @Test
@@ -27,6 +28,6 @@ public class RebelXmlBuilderTest {
     RebelXmlBuilder builder = new RebelXmlBuilder("3.0.0", "1.0.8");
     StringWriter result = new StringWriter();
     builder.writeXml(result);
-    assertTrue(result.toString().contains("plugin-version=\"1.0.8\""));
+    assertThat(result.toString(), containsString("plugin-version=\"1.0.8\""));
   }
 }

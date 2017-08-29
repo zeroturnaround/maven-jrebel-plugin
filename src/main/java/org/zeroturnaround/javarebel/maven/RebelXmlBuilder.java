@@ -66,11 +66,13 @@ class RebelXmlBuilder {
 
   public void writeXml(Writer writer) throws IOException {
     writer.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-    writer.write("\n<!--\n"
-        + "  This is the JRebel configuration file. It maps the running application to your IDE workspace, enabling JRebel reloading for this project.\n"
-        + "  Refer to https://manuals.zeroturnaround.com/jrebel/standalone/config.html for more information.\n" + "-->\n"
-        + "<application generated-by=\"maven\" build-tool-version=\""+mavenVersion+"\" plugin-version=\""+pluginVersion+"\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
-        + " xmlns=\"http://www.zeroturnaround.com\" xsi:schemaLocation=\"http://www.zeroturnaround.com http://update.zeroturnaround.com/jrebel/rebel-2_2.xsd\">\n");
+    writer.write("\n<!--\n" +
+        "  This is the JRebel configuration file. It maps the running application to your IDE workspace, enabling JRebel reloading for this project.\n" +
+        "  Refer to https://manuals.zeroturnaround.com/jrebel/standalone/config.html for more information.\n" +
+        "-->\n" +
+        "<application generated-by=\"maven\" build-tool-version=\"" + escapeXml(mavenVersion) + "\" plugin-version=\"" + escapeXml(pluginVersion) + "\" " +
+        "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://www.zeroturnaround.com\" " +
+        "xsi:schemaLocation=\"http://www.zeroturnaround.com http://update.zeroturnaround.com/jrebel/rebel-2_2.xsd\">\n");
     writer.write("\t<classpath");
     if (fallbackClasspath != null) {
       writer.write(" fallback=\"" + fallbackClasspath + "\"");
