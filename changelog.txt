@@ -1,0 +1,24 @@
+JRebel Maven Plugin changelog
+=============================
+
+1.1.8 (2017-08-30)
+------------------
+
+* Improvement: auto-detect module depth when generating rebel.xml on multi-module projects. Support for <rootRelativePath> configuration.
+* Bug fix: fixed an issue where rebel.xml generation includes directories that don't exist in the local file system.
+
+1.1.7 (2017-01-06)
+------------------
+
+* Improvement: added a helpful explanation paragraph to rebel.xml.
+
+1.1.6 (2016-05-18)
+------------------
+
+* Improvement: Added the generated-by attribute to rebel.xml.
+* Bug fix: fixed an compilation error caused by missing class AbstractScanner.
+
+1.1.5 (2013-06-11)
+------------------
+
+* Releasing the status quo with an appropriate version numbering.
