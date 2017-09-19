@@ -25,10 +25,11 @@ import org.apache.maven.plugin.MojoExecution;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
+import org.codehaus.plexus.interpolation.reflection.ReflectionValueExtractor;
 import org.codehaus.plexus.util.DirectoryScanner;
 import org.codehaus.plexus.util.StringUtils;
-import org.codehaus.plexus.util.interpolation.ObjectBasedValueSource;
 import org.codehaus.plexus.util.interpolation.RegexBasedInterpolator;
+import org.codehaus.plexus.util.interpolation.ValueSource;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.sonatype.plexus.build.incremental.BuildContext;
 import org.zeroturnaround.javarebel.maven.model.RebelClasspath;
@@ -829,15 +830,31 @@ public class GenerateRebelMojo extends AbstractMojo {
    * @param value
    * @return
    */
-  private String getInterpolatorValue(MavenProject project, String value) {
+  private String getInterpolatorValue(final MavenProject project, final String value) {
+    getLog().debug("Get interpolator value : " + value);
     RegexBasedInterpolator interpolator = new RegexBasedInterpolator();
-    interpolator.addValueSource(new ObjectBasedValueSource(project));
+    interpolator.addValueSource(new ValueSource() {
+      public Object getValue(String expression) {
+        if (expression == null || expression.trim().length() < 1) {
+          return null;
+        }
+
+        try {
+          getLog().debug("Request for interpolator expression : " + expression);
+          return ReflectionValueExtractor.evaluate(expression, project, false);
+        }
+        catch (Exception e) {
+          getLog().error("Error during interpolator expression evaluate (value=" + value + ", expression=" + expression + ")", e);
+          throw new RuntimeException(e);
+        }
+      }
+    });
 
     try {
       return interpolator.interpolate(value, "project");
     }
     catch (Exception e) {
-      getLog().debug("Detected exception during 'getInterpolatorValue' : ", e);
+      getLog().debug("Detected exception during 'getInterpolatorValue' : " + value, e);
       e.printStackTrace();
     }
     return value;
