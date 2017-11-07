@@ -4,7 +4,7 @@
 
   <groupId>org.zeroturnaround</groupId>
   <artifactId>jrebel-maven-plugin</artifactId>
-  <version>1.1.8</version>
+  <version>1.1.9-SNAPSHOT</version>
   <packaging>maven-plugin</packaging>
 
   <prerequisites>
@@ -62,7 +62,9 @@
     <profile>
       <id>publish</id>
       <activation>
-        <activeByDefault>true</activeByDefault>
+        <property>
+          <name>gpg.secretKeyring</name>
+        </property>        
       </activation>
       <build>
         <plugins>
