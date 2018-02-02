@@ -51,6 +51,7 @@ public class GenerateRebelMojo extends AbstractMojo {
 
   private static final Set JAR_PACKAGING = new HashSet();
   private static final Set WAR_PACKAGING = new HashSet();
+  private static final String POM_PACKAGING = "pom";
 
   static {
     JAR_PACKAGING.addAll(Arrays.asList(new String[]{"jar", "ejb", "ejb3", "nbm", "hk2-jar", "bundle", "eclipse-plugin", "atlassian-plugin"}));
@@ -314,6 +315,9 @@ public class GenerateRebelMojo extends AbstractMojo {
     }
     else if (JAR_PACKAGING.contains(packaging)) {
       builder = buildJar();
+    }
+    else if (POM_PACKAGING.equals(packaging)) {
+      getLog().info("Skipped generating rebel.xml for parent.");
     }
     else {
       getLog().warn("Unsupported packaging type: " + packaging);
