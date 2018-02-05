@@ -23,7 +23,6 @@ import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecution;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.DirectoryScanner;
 import org.codehaus.plexus.util.StringUtils;
@@ -54,8 +53,8 @@ public class GenerateRebelMojo extends AbstractMojo {
   private static final String POM_PACKAGING = "pom";
 
   static {
-    JAR_PACKAGING.addAll(Arrays.asList(new String[]{"jar", "ejb", "ejb3", "nbm", "hk2-jar", "bundle", "eclipse-plugin", "atlassian-plugin"}));
-    WAR_PACKAGING.addAll(Arrays.asList(new String[]{"war", "grails-app"}));
+    JAR_PACKAGING.addAll(Arrays.asList("jar", "ejb", "ejb3", "nbm", "hk2-jar", "bundle", "eclipse-plugin", "atlassian-plugin"));
+    WAR_PACKAGING.addAll(Arrays.asList("war", "grails-app"));
   }
 
   /**
@@ -207,53 +206,7 @@ public class GenerateRebelMojo extends AbstractMojo {
   /** @parameter default-value="${session}" */
   private MavenSession session;
 
-  private String findResourceFolder() {
-    final List list = this.project.getBuild().getResources();
-    String result = null;
-    if (!list.isEmpty()) {
-      for (final Object r : list) {
-        final Resource resource = (Resource) r;
-        if (resource != null && resource.getDirectory() != null && resource.getDirectory().length() > 0) {
-          result = FilenameUtils.normalize(resource.getDirectory());
-          if (!new File(result).isDirectory()) {
-            // don't make so big change in user's project as creating a folder in project
-            getLog().debug("Ignoring resource folder " + result + " because it doesn't exist");
-            result = null;
-          }
-          else {
-            break;
-          }
-        }
-      }
-    }
-    return result;
-  }
-
-  private File findFolderForRebelXml() throws MojoFailureException {
-    //If user configured jrebel plugin output dir, use it
-    if (this.rebelXmlDirectory != null) {
-      getLog().debug("rebelXmlDirectory is " + this.rebelXmlDirectory);
-      return this.rebelXmlDirectory;
-    }
-    //If POM has configured resource folder, use it
-    final String foundResourceFolder = findResourceFolder();
-    if (foundResourceFolder != null) {
-      getLog().debug("Detected resource folder : " + foundResourceFolder);
-      return new File(foundResourceFolder);
-    }
-    //Default to output directory (target)
-    String target = this.project.getBuild().getOutputDirectory();
-    getLog().debug("Using target directory : " + target);
-    return new File(target);
-  }
-
-  private void printWarningAboutPhase() {
-    if (this.execution != null && "process-resources".equals(this.execution.getLifecyclePhase())) {
-      this.getLog().warn("WARNING! As of version 1.1.6, JRebel Maven plugin generates rebel.xml file to source folder. To support this properly, please change your POM and set the <phase> for JRebel Maven plugin to \"generate-resources\".");
-    }
-  }
-
-  public void execute() throws MojoExecutionException, MojoFailureException {
+  public void execute() throws MojoExecutionException {
     if (this.rootPath == null) {
       // relative paths generation is OFF
       this.rootPath = project.getBasedir().getAbsolutePath();
@@ -297,9 +250,6 @@ public class GenerateRebelMojo extends AbstractMojo {
       this.generateDefaultClasspath = false;
       this.generateDefaultWeb = false;
     }
-
-    //final File rebelXmlTargetFolder = findFolderForRebelXml();
-    //getLog().info("Folder for rebel.xml : " + rebelXmlTargetFolder);
 
     final File rebelXmlFile = new File(rebelXmlDirectory, "rebel.xml").getAbsoluteFile();
     final File pomXmlFile = getProject().getFile();
@@ -524,14 +474,14 @@ public class GenerateRebelMojo extends AbstractMojo {
       prefix = prefix + "/";
     }
     for (int i = 0; i < includes.size(); i++) {
-      includes.set(i, prefix + (String) includes.get(i));
+      includes.set(i, prefix + includes.get(i));
     }
   }
 
   /**
    * Set includes & excludes for filtered resources.
    */
-  private boolean handleResourceAsInclude(RebelResource rebelResouce, Resource resource) throws MojoExecutionException {
+  private boolean handleResourceAsInclude(RebelResource rebelResouce, Resource resource) {
     File dir = new File(resource.getDirectory());
     if (!dir.isAbsolute()) {
       dir = new File(getProject().getBasedir(), resource.getDirectory());
@@ -570,13 +520,13 @@ public class GenerateRebelMojo extends AbstractMojo {
     DirectoryScanner scanner = new DirectoryScanner();
     scanner.setBasedir(resource.getDirectory());
     if (resource.getIncludes() != null && !resource.getIncludes().isEmpty()) {
-      scanner.setIncludes((String[]) resource.getIncludes().toArray(new String[resource.getIncludes().size()]));
+      scanner.setIncludes(resource.getIncludes().toArray(new String[resource.getIncludes().size()]));
     }
     else {
       scanner.setIncludes(DEFAULT_INCLUDES);
     }
     if (resource.getExcludes() != null && !resource.getExcludes().isEmpty()) {
-      scanner.setExcludes((String[]) resource.getExcludes().toArray(new String[resource.getExcludes().size()]));
+      scanner.setExcludes(resource.getExcludes().toArray(new String[resource.getExcludes().size()]));
     }
 
     scanner.addDefaultExcludes();
@@ -787,7 +737,7 @@ public class GenerateRebelMojo extends AbstractMojo {
    * @return the value of the plugin configuration
    */
   private static Xpp3Dom getPluginConfigurationDom(MavenProject project, String pluginId) {
-    Plugin plugin = (Plugin) project.getBuild().getPluginsAsMap().get(pluginId);
+    Plugin plugin = project.getBuild().getPluginsAsMap().get(pluginId);
     if (plugin != null) {
       return (Xpp3Dom) plugin.getConfiguration();
     }
@@ -988,17 +938,17 @@ public class GenerateRebelMojo extends AbstractMojo {
     return result;
   }
 
-  String calculateRelativePath(String relativePathToRoot, String rootRelativePath) throws IOException {
+  String calculateRelativePath(String relativePathToRoot, String rootRelativePath) {
     getLog().debug("relativePathToRoot:" + relativePathToRoot + " rootRelativePath:" + rootRelativePath);
-    if (relativePathToRoot == ".") {
-      if (rootRelativePath == ".") {
+    if (".".equals(relativePathToRoot)) {
+      if (".".equals(rootRelativePath)) {
         return ".";
       }
       else {
         return rootRelativePath;
       }
     }
-    else if (rootRelativePath == ".") {
+    else if (".".equals(rootRelativePath)) {
       return relativePathToRoot;
     }
 
