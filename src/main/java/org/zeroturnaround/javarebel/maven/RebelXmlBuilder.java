@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.maven.plugin.logging.Log;
+import org.apache.maven.plugin.logging.SystemStreamLog;
 import org.zeroturnaround.javarebel.maven.model.RebelClasspathResource;
 import org.zeroturnaround.javarebel.maven.model.RebelResource;
 import org.zeroturnaround.javarebel.maven.model.RebelWar;
@@ -17,10 +19,12 @@ import org.zeroturnaround.javarebel.maven.model.RebelWebResource;
  * Class for constructing xml configuration.
  */
 class RebelXmlBuilder {
+  private Log log = new SystemStreamLog();
 
   private String fallbackClasspath;
   private final String mavenVersion;
   private final String pluginVersion;
+  private final String outputDirectory;
   private final List<RebelClasspathResource> classpathDir = new ArrayList<RebelClasspathResource>();
   private final List<RebelClasspathResource> classpathJar = new ArrayList<RebelClasspathResource>();
   private final List<RebelClasspathResource> classpathJarset = new ArrayList<RebelClasspathResource>();
@@ -30,9 +34,10 @@ class RebelXmlBuilder {
 
   private List<RebelWebResource> webResources = new ArrayList<RebelWebResource>();
 
-  public RebelXmlBuilder(String mavenVersion, String pluginVersion) {
+  public RebelXmlBuilder(String mavenVersion, String pluginVersion, String outputDirectory) {
     this.mavenVersion = mavenVersion;
     this.pluginVersion = pluginVersion;
+    this.outputDirectory = outputDirectory;
   }
 
   public void setFallbackClasspath(String fallbackClasspath) {
@@ -112,8 +117,11 @@ class RebelXmlBuilder {
 
     if (webResources.size() > 0) {
       writer.write("\t<web>\n");
+      log.debug("Output directory: " + outputDirectory);
       for (RebelWebResource r : webResources) {
-        if (r.doesDirExistsOrNotAbsolute()) {
+        boolean validDirectory = r.validRebelTargetDir(outputDirectory);
+        log.debug(String.format("dir: %s, valid: %b", r.getDirectory(), validDirectory));
+        if (validDirectory) {
           writer.write("\t\t<link target=\"" + escapeXml(r.getTarget()) + "\">\n");
           writer.write("\t\t\t<dir name=\"" + escapeXml(r.getDirectory()) + "\">\n");
           writeExcludeInclude(writer, r);

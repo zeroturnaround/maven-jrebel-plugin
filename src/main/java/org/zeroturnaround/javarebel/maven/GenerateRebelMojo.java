@@ -206,6 +206,10 @@ public class GenerateRebelMojo extends AbstractMojo {
   /** @parameter default-value="${session}" */
   private MavenSession session;
 
+  /** @parameter default-value="${project.build.directory}" */
+  private String projectBuildDir;
+
+
   public void execute() throws MojoExecutionException {
     if (this.rootPath == null) {
       // relative paths generation is OFF
@@ -349,7 +353,10 @@ public class GenerateRebelMojo extends AbstractMojo {
    * @return new instance of RebelXmlBuilder
    */
   private RebelXmlBuilder createXmlBuilder() {
-    return new RebelXmlBuilder(session.getSystemProperties().getProperty("maven.version"), execution.getVersion());
+    return new RebelXmlBuilder(
+        session.getSystemProperties().getProperty("maven.version"),
+        execution.getVersion(),
+        projectBuildDir);
   }
 
   private void buildClasspath(RebelXmlBuilder builder) throws MojoExecutionException {

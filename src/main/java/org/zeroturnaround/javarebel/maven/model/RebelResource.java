@@ -1,5 +1,6 @@
 package org.zeroturnaround.javarebel.maven.model;
 
+import java.io.IOException;
 import java.util.List;
 
 public interface RebelResource {
@@ -12,10 +13,10 @@ public interface RebelResource {
 
   void setExcludes(List<String> excludes);
 
-  void setDirectory(String duirectory);
+  void setDirectory(String directory);
 
   String getDirectory();
 
-  boolean doesDirExistsOrNotAbsolute();
+  boolean validRebelTargetDir(String outputDirectory) throws IOException;
 
 }
