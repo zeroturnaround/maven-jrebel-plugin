@@ -251,8 +251,8 @@ public class GenerateRebelMojo extends AbstractMojo {
       this.generateDefaultWeb = false;
     }
 
-    final File rebelXmlFile = new File(rebelXmlDirectory, "rebel.xml").getAbsoluteFile();
-    final File pomXmlFile = getProject().getFile();
+    File rebelXmlFile = new File(rebelXmlDirectory, "rebel.xml").getAbsoluteFile();
+    File pomXmlFile = getProject().getFile();
     if (!alwaysGenerate && rebelXmlFile.exists() && pomXmlFile.exists() && rebelXmlFile.lastModified() > pomXmlFile.lastModified()) {
       return;
     }
@@ -359,9 +359,9 @@ public class GenerateRebelMojo extends AbstractMojo {
     // is then don't put default classpath as
     // first but put it where this element was.
     if (classpath != null) {
-      final RebelClasspathResource[] resources = classpath.getResources();
+      RebelClasspathResource[] resources = classpath.getResources();
       if (resources != null && resources.length > 0) {
-        for (final RebelClasspathResource r : resources) {
+        for (RebelClasspathResource r : resources) {
           if (!r.isTargetSet()) {
             addDefaultAsFirst = false;
             defaultClasspath = r;
@@ -377,9 +377,9 @@ public class GenerateRebelMojo extends AbstractMojo {
 
     if (classpath != null) {
       builder.setFallbackClasspath(classpath.getFallback());
-      final RebelClasspathResource[] resources = classpath.getResources();
+      RebelClasspathResource[] resources = classpath.getResources();
       if (resources != null && resources.length > 0) {
-        for (final RebelClasspathResource r : resources) {
+        for (RebelClasspathResource r : resources) {
           if (r.isTargetSet()) {
             if (r.getDirectory() != null) {
               r.setDirectory(fixFilePath(r.getDirectory()));
@@ -495,7 +495,7 @@ public class GenerateRebelMojo extends AbstractMojo {
     if (files.length > 0) {
       //only include files that come from this directory
       List<String> includedFiles = new ArrayList<String>();
-      for (final String file : files) {
+      for (String file : files) {
         includedFiles.add(StringUtils.replace(file, '\\', '/'));
       }
       rebelResource.setIncludes(includedFiles);
