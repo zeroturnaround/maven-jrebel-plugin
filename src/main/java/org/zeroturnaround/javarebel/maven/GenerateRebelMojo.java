@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -44,12 +43,13 @@ import org.zeroturnaround.javarebel.maven.model.RebelWebResource;
  * @phase process-resources
  * @threadSafe true
  */
+@SuppressWarnings({"JavaDoc", "unused"})
 public class GenerateRebelMojo extends AbstractMojo {
 
   private static final String[] DEFAULT_INCLUDES = {"**/**"};
 
-  private static final Set JAR_PACKAGING = new HashSet();
-  private static final Set WAR_PACKAGING = new HashSet();
+  private static final Set<String> JAR_PACKAGING = new HashSet<String>();
+  private static final Set<String> WAR_PACKAGING = new HashSet<String>();
   private static final String POM_PACKAGING = "pom";
 
   static {
@@ -425,18 +425,16 @@ public class GenerateRebelMojo extends AbstractMojo {
   }
 
   private void buildDefaultClasspathResources(RebelXmlBuilder builder) throws MojoExecutionException {
-    final boolean overwrite = Boolean.valueOf(getPluginSetting(getProject(), "org.apache.maven.plugins:maven-resources-plugin", "overwrite", "false"));
+    boolean overwrite = Boolean.valueOf(getPluginSetting(getProject(), "org.apache.maven.plugins:maven-resources-plugin", "overwrite", "false"));
 
     RebelClasspathResource rebelClassPathResource;
 
-    List resources = getProject().getResources();
+    List<Resource> resources = getProject().getResources();
     //if resources plugin is set to overwrite then reverse the order of resources
     if (overwrite) {
       Collections.reverse(resources);
     }
-    for (Iterator i = resources.iterator(); i.hasNext(); ) {
-      Resource resource = (Resource) i.next();
-
+    for (Resource resource : resources) {
       File dir = new File(resource.getDirectory());
       if (!dir.isAbsolute()) {
         dir = new File(getProject().getBasedir(), resource.getDirectory());
@@ -469,7 +467,7 @@ public class GenerateRebelMojo extends AbstractMojo {
     }
   }
 
-  private void setIncludePrefix(List includes, String prefix) {
+  private void setIncludePrefix(List<String> includes, String prefix) {
     if (!prefix.endsWith("/")) {
       prefix = prefix + "/";
     }
@@ -481,7 +479,7 @@ public class GenerateRebelMojo extends AbstractMojo {
   /**
    * Set includes & excludes for filtered resources.
    */
-  private boolean handleResourceAsInclude(RebelResource rebelResouce, Resource resource) {
+  private boolean handleResourceAsInclude(RebelResource rebelResource, Resource resource) {
     File dir = new File(resource.getDirectory());
     if (!dir.isAbsolute()) {
       dir = new File(getProject().getBasedir(), resource.getDirectory());
@@ -496,11 +494,11 @@ public class GenerateRebelMojo extends AbstractMojo {
     String[] files = getFilesToCopy(resource);
     if (files.length > 0) {
       //only include files that come from this directory
-      List includedFiles = new ArrayList();
+      List<String> includedFiles = new ArrayList<String>();
       for (final String file : files) {
         includedFiles.add(StringUtils.replace(file, '\\', '/'));
       }
-      rebelResouce.setIncludes(includedFiles);
+      rebelResource.setIncludes(includedFiles);
     }
     else {
       //there weren't any matching files
@@ -520,13 +518,13 @@ public class GenerateRebelMojo extends AbstractMojo {
     DirectoryScanner scanner = new DirectoryScanner();
     scanner.setBasedir(resource.getDirectory());
     if (resource.getIncludes() != null && !resource.getIncludes().isEmpty()) {
-      scanner.setIncludes(resource.getIncludes().toArray(new String[resource.getIncludes().size()]));
+      scanner.setIncludes(resource.getIncludes().toArray(new String[0]));
     }
     else {
       scanner.setIncludes(DEFAULT_INCLUDES);
     }
     if (resource.getExcludes() != null && !resource.getExcludes().isEmpty()) {
-      scanner.setExcludes(resource.getExcludes().toArray(new String[resource.getExcludes().size()]));
+      scanner.setExcludes(resource.getExcludes().toArray(new String[0]));
     }
 
     scanner.addDefaultExcludes();
@@ -540,9 +538,9 @@ public class GenerateRebelMojo extends AbstractMojo {
     boolean addDefaultAsFirst = true;
     RebelWebResource defaultWeb = null;
     if (web != null) {
-      final RebelWebResource[] resources = web.getResources();
+      RebelWebResource[] resources = web.getResources();
       if (resources != null && resources.length > 0) {
-        for (final RebelWebResource r : resources) {
+        for (RebelWebResource r : resources) {
           if (r.getDirectory() == null && r.getTarget() == null) {
             defaultWeb = r;
             addDefaultAsFirst = false;
@@ -557,9 +555,9 @@ public class GenerateRebelMojo extends AbstractMojo {
     }
 
     if (web != null) {
-      final RebelWebResource[] resources = web.getResources();
+      RebelWebResource[] resources = web.getResources();
       if (resources != null && resources.length > 0) {
-        for (final RebelWebResource r : resources) {
+        for (RebelWebResource r : resources) {
           if (r.getDirectory() == null && r.getTarget() == null) {
             buildDefaultWeb(builder, r);
             continue;
@@ -571,7 +569,7 @@ public class GenerateRebelMojo extends AbstractMojo {
     }
   }
 
-  private void buildDefaultWeb(final RebelXmlBuilder builder, final RebelWebResource defaultWeb) throws MojoExecutionException {
+  private void buildDefaultWeb(RebelXmlBuilder builder, RebelWebResource defaultWeb) throws MojoExecutionException {
     if (!generateDefaultWeb) {
       return;
     }
@@ -591,13 +589,11 @@ public class GenerateRebelMojo extends AbstractMojo {
       //handle web resources configured for war plugin
       Xpp3Dom wr = warPluginConf.getChild("webResources");
       if (wr != null) {
-        List resources = parseWarResources(wr);
+        List<Resource> resources = parseWarResources(wr);
         //web resources overwrite each other
         Collections.reverse(resources);
 
-        for (Iterator i = resources.iterator(); i.hasNext(); ) {
-          Resource resource = (Resource) i.next();
-
+        for (Resource resource : resources) {
           File dir = new File(resource.getDirectory());
           if (!dir.isAbsolute()) {
             dir = new File(getProject().getBasedir(), resource.getDirectory());
@@ -674,10 +670,10 @@ public class GenerateRebelMojo extends AbstractMojo {
    * @param warResourcesNode
    * @return
    */
-  private List parseWarResources(Xpp3Dom warResourcesNode) {
-    final List resources = new ArrayList();
-    final Xpp3Dom[] resourceNodes = warResourcesNode.getChildren("resource");
-    for (final Xpp3Dom resourceNode : resourceNodes) {
+  private List<Resource> parseWarResources(Xpp3Dom warResourcesNode) {
+    List<Resource> resources = new ArrayList<Resource>();
+    Xpp3Dom[] resourceNodes = warResourcesNode.getChildren("resource");
+    for (Xpp3Dom resourceNode : resourceNodes) {
       if (resourceNode == null || resourceNode.getChild("directory") == null) {
         continue;
       }
@@ -706,9 +702,9 @@ public class GenerateRebelMojo extends AbstractMojo {
     }
 
     if (rn.getChild("excludes") != null) {
-      final List excludes = new ArrayList();
-      final Xpp3Dom[] excludeNodes = rn.getChild("excludes").getChildren("exclude");
-      for (final Xpp3Dom excludeNode : excludeNodes) {
+      List<String> excludes = new ArrayList<String>();
+      Xpp3Dom[] excludeNodes = rn.getChild("excludes").getChildren("exclude");
+      for (Xpp3Dom excludeNode : excludeNodes) {
         if (excludeNode != null && excludeNode.getValue() != null) {
           excludes.add(getValue(getProject(), excludeNode));
         }
@@ -716,9 +712,9 @@ public class GenerateRebelMojo extends AbstractMojo {
       r.setExcludes(excludes);
     }
     if (rn.getChild("includes") != null) {
-      final List includes = new ArrayList();
-      final Xpp3Dom[] includeNodes = rn.getChild("includes").getChildren("include");
-      for (final Xpp3Dom includeNode : includeNodes) {
+      List<String> includes = new ArrayList<String>();
+      Xpp3Dom[] includeNodes = rn.getChild("includes").getChildren("include");
+      for (Xpp3Dom includeNode : includeNodes) {
         if (includeNode != null && includeNode.getValue() != null) {
           includes.add(getValue(getProject(), includeNode));
         }

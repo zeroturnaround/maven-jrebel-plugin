@@ -13,8 +13,8 @@ public class RebelClasspathResource implements RebelResource {
   private String jarset;
   private String dirset;
 
-  private List excludes;
-  private List includes;
+  private List<String> excludes;
+  private List<String> includes;
 
   public boolean doesDirExistsOrNotAbsolute() {
     File file = new File(directory);
@@ -56,19 +56,19 @@ public class RebelClasspathResource implements RebelResource {
     this.dirset = dirset;
   }
 
-  public List getExcludes() {
+  public List<String> getExcludes() {
     return excludes;
   }
 
-  public void setExcludes(List excludes) {
+  public void setExcludes(List<String> excludes) {
     this.excludes = excludes;
   }
 
-  public List getIncludes() {
+  public List<String> getIncludes() {
     return includes;
   }
 
-  public void setIncludes(List includes) {
+  public void setIncludes(List<String> includes) {
     this.includes = includes;
   }
 

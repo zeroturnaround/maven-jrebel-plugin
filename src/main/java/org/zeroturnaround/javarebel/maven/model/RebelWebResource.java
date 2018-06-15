@@ -11,8 +11,8 @@ public class RebelWebResource implements RebelResource {
   private String target;
   private String directory;
 
-  private List excludes;
-  private List includes;
+  private List<String> excludes;
+  private List<String> includes;
 
   public String getTarget() {
     return target;
@@ -42,19 +42,19 @@ public class RebelWebResource implements RebelResource {
     this.directory = directory;
   }
 
-  public List getExcludes() {
+  public List<String> getExcludes() {
     return excludes;
   }
 
-  public void setExcludes(List excludes) {
+  public void setExcludes(List<String> excludes) {
     this.excludes = excludes;
   }
 
-  public List getIncludes() {
+  public List<String> getIncludes() {
     return includes;
   }
 
-  public void setIncludes(List includes) {
+  public void setIncludes(List<String> includes) {
     this.includes = includes;
   }
 

@@ -5,7 +5,6 @@ import static org.apache.commons.lang.StringEscapeUtils.escapeXml;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
@@ -22,14 +21,14 @@ class RebelXmlBuilder {
   private String fallbackClasspath;
   private final String mavenVersion;
   private final String pluginVersion;
-  private final List classpathDir = new ArrayList();
-  private final List classpathJar = new ArrayList();
-  private final List classpathJarset = new ArrayList();
-  private final List classpathDirset = new ArrayList();
+  private final List<RebelClasspathResource> classpathDir = new ArrayList<RebelClasspathResource>();
+  private final List<RebelClasspathResource> classpathJar = new ArrayList<RebelClasspathResource>();
+  private final List<RebelClasspathResource> classpathJarset = new ArrayList<RebelClasspathResource>();
+  private final List<RebelClasspathResource> classpathDirset = new ArrayList<RebelClasspathResource>();
 
   private RebelWar war;
 
-  private List webResources = new ArrayList();
+  private List<RebelWebResource> webResources = new ArrayList<RebelWebResource>();
 
   public RebelXmlBuilder(String mavenVersion, String pluginVersion) {
     this.mavenVersion = mavenVersion;
@@ -79,29 +78,25 @@ class RebelXmlBuilder {
     }
     writer.write(">\n");
 
-    for (Iterator i = classpathDir.iterator(); i.hasNext();) {
-      RebelClasspathResource r = (RebelClasspathResource) i.next();
+    for (RebelClasspathResource r : classpathDir) {
       writer.write("\t\t<dir name=\"" + escapeXml(r.getDirectory()) + "\">\n");
       writeExcludeInclude(writer, r);
       writer.write("\t\t</dir>\n");
     }
 
-    for (Iterator i = classpathJar.iterator(); i.hasNext();) {
-      RebelClasspathResource r = (RebelClasspathResource) i.next();
+    for (RebelClasspathResource r : classpathJar) {
       writer.write("\t\t<jar name=\"" + escapeXml(r.getJar()) + "\">\n");
       writeExcludeInclude(writer, r);
       writer.write("\t\t</jar>\n");
     }
 
-    for (Iterator i = classpathJarset.iterator(); i.hasNext();) {
-      RebelClasspathResource r = (RebelClasspathResource) i.next();
+    for (RebelClasspathResource r : classpathJarset) {
       writer.write("\t\t<jarset dir=\"" + escapeXml(r.getJarset()) + "\">\n");
       writeExcludeInclude(writer, r);
       writer.write("\t\t</jarset>\n");
     }
 
-    for (Iterator i = classpathDirset.iterator(); i.hasNext();) {
-      RebelClasspathResource r = (RebelClasspathResource) i.next();
+    for (RebelClasspathResource r : classpathDirset) {
       writer.write("\t\t<dirset dir=\"" + escapeXml(r.getDirset()) + "\">\n");
       writeExcludeInclude(writer, r);
       writer.write("\t\t</dirset>\n");
@@ -117,8 +112,7 @@ class RebelXmlBuilder {
 
     if (webResources.size() > 0) {
       writer.write("\t<web>\n");
-      for (Iterator i = webResources.iterator(); i.hasNext(); ) {
-        RebelWebResource r = (RebelWebResource) i.next();
+      for (RebelWebResource r : webResources) {
         if (r.doesDirExistsOrNotAbsolute()) {
           writer.write("\t\t<link target=\"" + escapeXml(r.getTarget()) + "\">\n");
           writer.write("\t\t\t<dir name=\"" + escapeXml(r.getDirectory()) + "\">\n");
@@ -146,14 +140,12 @@ class RebelXmlBuilder {
   private void writeExcludeInclude(Writer writer, RebelResource r, int indent) throws IOException {
     String indention = StringUtils.repeat("\t", indent);
     if (r.getExcludes() != null) {
-      for (Iterator i = r.getExcludes().iterator(); i.hasNext();) {
-        String exclude = (String) i.next();
+      for (String exclude : r.getExcludes()) {
         writer.write(indention + "<exclude name=\"" + escapeXml(exclude) + "\"/>\n");
       }
     }
     if (r.getIncludes() != null) {
-      for (Iterator i = r.getIncludes().iterator(); i.hasNext();) {
-        String include = (String) i.next();
+      for (String include : r.getIncludes()) {
         writer.write(indention + "<include name=\"" + escapeXml(include) + "\"/>\n");
       }
     }

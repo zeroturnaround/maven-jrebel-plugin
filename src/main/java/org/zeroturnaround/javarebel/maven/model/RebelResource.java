@@ -4,13 +4,13 @@ import java.util.List;
 
 public interface RebelResource {
 
-  List getIncludes();
+  List<String> getIncludes();
 
-  void setIncludes(List includes);
+  void setIncludes(List<String> includes);
 
-  List getExcludes();
+  List<String> getExcludes();
 
-  void setExcludes(List excludes);
+  void setExcludes(List<String> excludes);
 
   void setDirectory(String duirectory);
 
