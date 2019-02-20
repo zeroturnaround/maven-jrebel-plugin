@@ -1,6 +1,12 @@
 JRebel Maven Plugin changelog
 =============================
 
+1.1.9 (2019-02-20)
+------------------
+
+* Bug fix: <dir> elements will now be generated for non existing paths under the target folder.
+* Bug fix: rebel.xml generation for projects with 'pom' packaging is now skipped instead of producing a warning.
+
 1.1.8 (2017-08-30)
 ------------------
 
