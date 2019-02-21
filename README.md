@@ -16,7 +16,7 @@ Add the following snippet to the **pom.xml** of your Maven project to generate t
 <plugin>
   <groupId>org.zeroturnaround</groupId>
   <artifactId>jrebel-maven-plugin</artifactId>
-  <version>1.1.8</version>
+  <version>1.1.9</version>
   <executions>
     <execution>
       <id>generate-rebel-xml</id>
