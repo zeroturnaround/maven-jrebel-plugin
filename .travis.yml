@@ -5,10 +5,11 @@ addons:
   sonarcloud:
     organization: "zeroturnaround"
     token:
-      secure: "nwp2dncBIEw/jOOuyv5EaUI4BM8W5Ezx62LzCNfVN1a1KnKRWNicJQWIHI4x3ILWvD5WShFzUmQtTIdg3cf3v4rjjMsZyGr7EXJm082k9N6kMkn7wnrIBF2kFDaPo43KGY2YNOX91InpBaZHa6lj3sF6tHcP6Ria90Xeyot5zQ8="
+      secure: "dFNgwt3sxnNxGwV4A/TIGB/RnUxaGj6fghwZH6hhj2t74+Tt5AC59XSpXN+CcPJ1YBZzsWdjTI5Q1rMkZn5cNQ5LTto8uYRLbZNlJlEn1A/kAqPnInNu+TBziIW9ykoDvm8pS6t2itSlRDl7Udbf4Vx1bzi8ycZRtDEuzWkuV4M="
 jdk:
   - oraclejdk8
 script:
+  - git fetch --unshallow
   - mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar
 cache:
   directories:
