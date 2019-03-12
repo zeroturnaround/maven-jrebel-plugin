@@ -4,8 +4,7 @@ install: true
 addons:
   sonarcloud:
     organization: "zeroturnaround"
-    token:
-      secure: "dFNgwt3sxnNxGwV4A/TIGB/RnUxaGj6fghwZH6hhj2t74+Tt5AC59XSpXN+CcPJ1YBZzsWdjTI5Q1rMkZn5cNQ5LTto8uYRLbZNlJlEn1A/kAqPnInNu+TBziIW9ykoDvm8pS6t2itSlRDl7Udbf4Vx1bzi8ycZRtDEuzWkuV4M="
+    token: $SONAR_TOKEN
 jdk:
   - oraclejdk8
 script:
