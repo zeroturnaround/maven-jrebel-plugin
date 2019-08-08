@@ -143,7 +143,7 @@ public class GenerateRebelMojo extends AbstractMojo {
   private String rootRelativePath;
 
   /**
-   * Target directory for generated rebel.xml
+   * Target directory for generated rebel.xml and rebel-remote.xml files.
    *
    * @parameter expression="${rebel.xml.dir}" default-value="${project.build.outputDirectory}"
    * @required
@@ -165,7 +165,8 @@ public class GenerateRebelMojo extends AbstractMojo {
   private boolean addResourcesDirToRebelXml;
 
   /**
-   * If set to true rebel plugin will generate rebel.xml on each build, otherwise the timestamps of rebel.xml and pom.xml are compared.
+   * If set to true rebel plugin will generate rebel.xml and rebel-remote.xml (if 'generateRebelRemote' is set) on each build.
+   * Otherwise the timestamps of rebel.xml and pom.xml are compared. The rebel-remote.xml would then be generated nevertheless.
    *
    * @parameter default-value="false"
    */
@@ -324,7 +325,7 @@ public class GenerateRebelMojo extends AbstractMojo {
   }
 
   /**
-   * Generates rebel-remote.xml
+   * Generates rebel-remote.xml.
    * @throws MojoExecutionException
    */
   private void generateRebelRemoteXmlFile(File rebelRemoteXmlFile) throws MojoExecutionException {
@@ -356,7 +357,7 @@ public class GenerateRebelMojo extends AbstractMojo {
   }
 
   /**
-   * Generates rebel-remote.xml content and write it into the provided Writer
+   * Generates rebel-remote.xml content and write it into the provided Writer.
    */
   void generateRebelRemoteXml(Writer w) throws IOException {
     String moduleId = URLEncoder.encode( getProject().getArtifactId(), CHARTSET_UTF8).replaceAll("\\.", "_2E");
