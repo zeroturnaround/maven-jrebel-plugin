@@ -52,7 +52,7 @@ public class GenerateRebelMojo extends AbstractMojo {
   private static final Set<String> JAR_PACKAGING = new HashSet<String>();
   private static final Set<String> WAR_PACKAGING = new HashSet<String>();
   private static final String POM_PACKAGING = "pom";
-  public static final String CHARSET_NAME = "UTF-8";
+  public static final String CHARTSET_UTF8 = "UTF-8";
 
   static {
     JAR_PACKAGING.addAll(Arrays.asList("jar", "ejb", "ejb3", "nbm", "hk2-jar", "bundle", "eclipse-plugin", "atlassian-plugin"));
@@ -193,7 +193,7 @@ public class GenerateRebelMojo extends AbstractMojo {
   private boolean generateDefaultElements;
 
   /**
-   * Indicates whether the rebel-remote.xml file will be generated or not..
+   * Indicates whether the rebel-remote.xml file will be generated or not.
    *
    * @parameter default-value="false"
    */
@@ -247,10 +247,10 @@ public class GenerateRebelMojo extends AbstractMojo {
       }
     }
 
-    // do not generate rebel.xml file if skip parameter or 'performRelease' system property is set to true
+    // do not generate JRebel configuration files if skip parameter or 'performRelease' system property is set to true
     try {
       if (this.skip || Boolean.getBoolean("performRelease")) {
-        getLog().info("Skipped generating rebel.xml.");
+        getLog().info("Skipped generating JRebel configuration files.");
         return;
       }
     }
@@ -301,7 +301,7 @@ public class GenerateRebelMojo extends AbstractMojo {
 
       try {
         rebelXmlDirectory.mkdirs();
-        w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(rebelXmlFile), CHARSET_NAME));
+        w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(rebelXmlFile), CHARTSET_UTF8));
         builder.writeXml(w);
       }
       catch (IOException e) {
@@ -314,11 +314,6 @@ public class GenerateRebelMojo extends AbstractMojo {
           this.buildContext.refresh(rebelXmlFile);
         }
       }
-
-      if( generateRebelRemote) {
-
-        generateRebelRemoteXmlFile();
-      }
     }
   }
 
@@ -326,9 +321,7 @@ public class GenerateRebelMojo extends AbstractMojo {
    * Generates rebel-remote.xml
    * @throws MojoExecutionException
    */
-  private void generateRebelRemoteXmlFile() throws MojoExecutionException {
-
-    File rebelRemoteXmlFile = new File(rebelXmlDirectory, "rebel-remote.xml").getAbsoluteFile();
+  private void generateRebelRemoteXmlFile(File rebelRemoteXmlFile) throws MojoExecutionException {
     getLog().info("Generating rebel-remote.xml on : " + rebelRemoteXmlFile.getAbsolutePath());
 
     Writer w = null;
@@ -338,39 +331,33 @@ public class GenerateRebelMojo extends AbstractMojo {
         generateRebelRemoteXml(w);
         getLog().info(w.toString());
       } catch (IOException e) {
-        getLog().debug("Detected exception during 'showGenerated' : ",e);
+        getLog().debug("Detected exception during 'showGenerated' : ", e);
       }
     }
 
     try {
       rebelXmlDirectory.mkdirs();
-      w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(rebelRemoteXmlFile), CHARSET_NAME));
+      w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(rebelRemoteXmlFile), CHARTSET_UTF8));
       generateRebelRemoteXml(w);
-
     } catch (IOException e) {
-      throw new MojoExecutionException("Failed writing rebel.xml", e);
+      throw new MojoExecutionException("Failed writing rebel-remote.xml", e);
     } finally {
       IOUtils.closeQuietly(w);
       if (this.buildContext != null) {
-        // safeguard for null buildContext. Can it be null, actually? E.g when field is not injected.
         this.buildContext.refresh(rebelRemoteXmlFile);
       }
     }
-
   }
 
   /**
    * Generates rebel-remote.xml content and write it into the provided Writer
-   *
    */
   private void generateRebelRemoteXml(Writer w) throws IOException {
-
-    String moduleId = URLEncoder.encode( getProject().getArtifactId(), CHARSET_NAME).replaceAll("\\.", "_2E");
-
-    w.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-            "<rebel-remote xmlns=\"http://www.zeroturnaround.com/rebel/remote\">\n" +
-            "    <id>" +  moduleId + "</id>\n" +
-            "</rebel-remote>");
+    String moduleId = URLEncoder.encode( getProject().getArtifactId(), CHARTSET_UTF8).replaceAll("\\.", "_2E");
+    w.write(String.format("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+        "<rebel-remote xmlns=\"http://www.zeroturnaround.com/rebel/remote\">\n" +
+        "    <id>%s</id>\n" +
+        "</rebel-remote>", moduleId));
   }
 
   /**
