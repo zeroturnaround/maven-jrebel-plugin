@@ -360,11 +360,10 @@ public class GenerateRebelMojo extends AbstractMojo {
    * Generates rebel-remote.xml content and write it into the provided Writer.
    */
   void generateRebelRemoteXml(Writer w) throws IOException {
-    String moduleId = URLEncoder.encode( getProject().getArtifactId(), CHARTSET_UTF8).replaceAll("\\.", "_2E");
     w.write(String.format("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
         "<rebel-remote xmlns=\"http://www.zeroturnaround.com/rebel/remote\">\n" +
         "    <id>%s</id>\n" +
-        "</rebel-remote>", moduleId));
+        "</rebel-remote>", getProject().getArtifactId()));
   }
 
   /**
