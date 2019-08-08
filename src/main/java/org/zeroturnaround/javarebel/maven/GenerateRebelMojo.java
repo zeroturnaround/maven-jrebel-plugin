@@ -265,7 +265,13 @@ public class GenerateRebelMojo extends AbstractMojo {
     }
 
     File rebelXmlFile = new File(rebelXmlDirectory, "rebel.xml").getAbsoluteFile();
+    File rebelRemoteXmlFile = new File(rebelXmlDirectory, "rebel-remote.xml").getAbsoluteFile();
     File pomXmlFile = getProject().getFile();
+
+    if (generateRebelRemote && (alwaysGenerate || !rebelRemoteXmlFile.exists())) {
+      generateRebelRemoteXmlFile(rebelRemoteXmlFile);
+    }
+
     if (!alwaysGenerate && rebelXmlFile.exists() && pomXmlFile.exists() && rebelXmlFile.lastModified() > pomXmlFile.lastModified()) {
       return;
     }
