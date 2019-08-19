@@ -17,6 +17,7 @@ public class RebelRemoteXmlTest {
   public void setUp() {
     grm = new GenerateRebelMojo();
     grm.setProject(new MavenProject());
+    grm.getProject().setGroupId("org.zeroturnaround");
     grm.getProject().setArtifactId("test-artifact-id");
   }
 
@@ -24,6 +25,6 @@ public class RebelRemoteXmlTest {
   public void testRebelRemoteIdGenerating() throws IOException {
     StringWriter result = new StringWriter();
     grm.generateRebelRemoteXml(result);
-    assertThat(result.toString(), containsString("<id>test-artifact-id</id>"));
+    assertThat(result.toString(), containsString("<id>org.zeroturnaround:test-artifact-id</id>"));
   }
 }

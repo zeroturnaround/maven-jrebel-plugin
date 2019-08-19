@@ -363,7 +363,7 @@ public class GenerateRebelMojo extends AbstractMojo {
     w.write(String.format("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
         "<rebel-remote xmlns=\"http://www.zeroturnaround.com/rebel/remote\">\n" +
         "    <id>%s</id>\n" +
-        "</rebel-remote>", getProject().getArtifactId()));
+        "</rebel-remote>", String.format("%s:%s", getProject().getGroupId(), getProject().getArtifactId())));
   }
 
   /**
