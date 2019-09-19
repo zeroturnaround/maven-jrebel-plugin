@@ -25,6 +25,6 @@ public class RebelRemoteXmlTest {
   public void testRebelRemoteIdGenerating() throws IOException {
     StringWriter result = new StringWriter();
     grm.generateRebelRemoteXml(result);
-    assertThat(result.toString(), containsString("<id>org.zeroturnaround:test-artifact-id</id>"));
+    assertThat(result.toString(), containsString("<id>org.zeroturnaround.test-artifact-id</id>"));
   }
 }
