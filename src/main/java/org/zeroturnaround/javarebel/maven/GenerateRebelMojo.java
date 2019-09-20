@@ -35,6 +35,7 @@ import org.zeroturnaround.javarebel.maven.model.RebelResource;
 import org.zeroturnaround.javarebel.maven.model.RebelWar;
 import org.zeroturnaround.javarebel.maven.model.RebelWeb;
 import org.zeroturnaround.javarebel.maven.model.RebelWebResource;
+import org.zeroturnaround.javarebel.maven.util.SystemUtils;
 
 /**
  * Generate rebel.xml
@@ -51,6 +52,7 @@ public class GenerateRebelMojo extends AbstractMojo {
   private static final Set<String> JAR_PACKAGING = new HashSet<String>();
   private static final Set<String> WAR_PACKAGING = new HashSet<String>();
   private static final String POM_PACKAGING = "pom";
+  public static final String CHARTSET_UTF8 = "UTF-8";
 
   static {
     JAR_PACKAGING.addAll(Arrays.asList("jar", "ejb", "ejb3", "nbm", "hk2-jar", "bundle", "eclipse-plugin", "atlassian-plugin"));
@@ -141,7 +143,7 @@ public class GenerateRebelMojo extends AbstractMojo {
   private String rootRelativePath;
 
   /**
-   * Target directory for generated rebel.xml
+   * Target directory for generated rebel.xml and rebel-remote.xml files.
    *
    * @parameter expression="${rebel.xml.dir}" default-value="${project.build.outputDirectory}"
    * @required
@@ -163,7 +165,8 @@ public class GenerateRebelMojo extends AbstractMojo {
   private boolean addResourcesDirToRebelXml;
 
   /**
-   * If set to true rebel plugin will generate rebel.xml on each build, otherwise the timestamps of rebel.xml and pom.xml are compared.
+   * If set to true rebel plugin will generate rebel.xml and rebel-remote.xml (if 'generateRebelRemote' is set) on each build.
+   * Otherwise the timestamps of rebel.xml and pom.xml are compared. The rebel-remote.xml would then be generated nevertheless.
    *
    * @parameter default-value="false"
    */
@@ -189,6 +192,13 @@ public class GenerateRebelMojo extends AbstractMojo {
    * @parameter default-value="true"
    */
   private boolean generateDefaultElements;
+
+  /**
+   * Indicates whether the rebel-remote.xml file will be generated or not.
+   *
+   * @parameter default-value="false"
+   */
+  private boolean generateRebelRemote;
 
   /**
    * If set to true rebel plugin execution will be skipped.
@@ -238,10 +248,10 @@ public class GenerateRebelMojo extends AbstractMojo {
       }
     }
 
-    // do not generate rebel.xml file if skip parameter or 'performRelease' system property is set to true
+    // do not generate JRebel configuration files if skip parameter or 'performRelease' system property is set to true
     try {
       if (this.skip || Boolean.getBoolean("performRelease")) {
-        getLog().info("Skipped generating rebel.xml.");
+        getLog().info("Skipped generating JRebel configuration files.");
         return;
       }
     }
@@ -256,7 +266,13 @@ public class GenerateRebelMojo extends AbstractMojo {
     }
 
     File rebelXmlFile = new File(rebelXmlDirectory, "rebel.xml").getAbsoluteFile();
+    File rebelRemoteXmlFile = new File(rebelXmlDirectory, "rebel-remote.xml").getAbsoluteFile();
     File pomXmlFile = getProject().getFile();
+
+    if (generateRebelRemote && (alwaysGenerate || !rebelRemoteXmlFile.exists())) {
+      generateRebelRemoteXmlFile(rebelRemoteXmlFile);
+    }
+
     if (!alwaysGenerate && rebelXmlFile.exists() && pomXmlFile.exists() && rebelXmlFile.lastModified() > pomXmlFile.lastModified()) {
       return;
     }
@@ -292,7 +308,7 @@ public class GenerateRebelMojo extends AbstractMojo {
 
       try {
         rebelXmlDirectory.mkdirs();
-        w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(rebelXmlFile), "UTF-8"));
+        w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(rebelXmlFile), CHARTSET_UTF8));
         builder.writeXml(w);
       }
       catch (IOException e) {
@@ -306,6 +322,50 @@ public class GenerateRebelMojo extends AbstractMojo {
         }
       }
     }
+  }
+
+  /**
+   * Generates rebel-remote.xml.
+   * @throws MojoExecutionException
+   */
+  private void generateRebelRemoteXmlFile(File rebelRemoteXmlFile) throws MojoExecutionException {
+    getLog().info("Generating rebel-remote.xml on : " + rebelRemoteXmlFile.getAbsolutePath());
+
+    Writer w = null;
+    if (this.showGenerated) {
+      try {
+        w = new StringWriter();
+        generateRebelRemoteXml(w);
+        getLog().info(w.toString());
+      } catch (IOException e) {
+        getLog().debug("Detected exception during 'showGenerated' : ", e);
+      }
+    }
+
+    try {
+      rebelXmlDirectory.mkdirs();
+      w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(rebelRemoteXmlFile), CHARTSET_UTF8));
+      generateRebelRemoteXml(w);
+    } catch (IOException e) {
+      throw new MojoExecutionException("Failed writing rebel-remote.xml", e);
+    } finally {
+      IOUtils.closeQuietly(w);
+      if (this.buildContext != null) {
+        this.buildContext.refresh(rebelRemoteXmlFile);
+      }
+    }
+  }
+
+  /**
+   * Generates rebel-remote.xml content and write it into the provided Writer.
+   */
+  void generateRebelRemoteXml(Writer w) throws IOException {
+    w.write(String.format("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+        "<rebel-remote xmlns=\"http://www.zeroturnaround.com/rebel/remote\">\n" +
+        "    <id>%s</id>\n" +
+        "</rebel-remote>",
+        SystemUtils.ensurePathAndURLSafeName(String.format("%s.%s", getProject().getGroupId(), getProject().getArtifactId())))
+    );
   }
 
   /**
