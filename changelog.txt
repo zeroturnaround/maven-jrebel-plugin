@@ -1,6 +1,11 @@
 JRebel Maven Plugin changelog
 =============================
 
+1.1.10 (2019-09-24)
+------------------
+
+* Improvement: added support for generating rebel-remote.xml configuration files for JRebel Remote Server support.
+
 1.1.9 (2019-02-20)
 ------------------
 
@@ -21,7 +26,7 @@ JRebel Maven Plugin changelog
 1.1.6 (2016-05-18)
 ------------------
 
-* Improvement: Added the generated-by attribute to rebel.xml.
+* Improvement: added the generated-by attribute to rebel.xml.
 * Bug fix: fixed an compilation error caused by missing class AbstractScanner.
 
 1.1.5 (2013-06-11)
