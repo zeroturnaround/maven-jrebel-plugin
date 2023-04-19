@@ -30,8 +30,8 @@
 
   <scm>
     <url>https://github.com/zeroturnaround/maven-jrebel-plugin</url>
-    <connection>scm:git:git@github.com:zeroturnaround/maven-jrebel-plugin.git</connection>
-    <developerConnection>scm:git:git@github.com:zeroturnaround/maven-jrebel-plugin.git</developerConnection>
+    <connection>scm:git:https://github.com/zeroturnaround/maven-jrebel-plugin.git</connection>
+    <developerConnection>scm:git:https://github.com/zeroturnaround/maven-jrebel-plugin.git</developerConnection>
     <tag>HEAD</tag>
   </scm>
 
@@ -64,7 +64,7 @@
       <activation>
         <property>
           <name>gpg.secretKeyring</name>
-        </property>        
+        </property>
       </activation>
       <build>
         <plugins>
@@ -111,7 +111,7 @@
             </goals>
           </execution>
         </executions>
-      </plugin>      
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
