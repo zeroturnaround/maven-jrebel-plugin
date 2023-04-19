@@ -1,6 +1,12 @@
 JRebel Maven Plugin changelog
 =============================
 
+1.1.11 (2023-04-18)
+------------------
+
+* Improvement: require Java 8.
+* Improvement: bumped commons-io and junit dependency versions to resolve vulnerability issues.  
+
 1.1.10 (2019-09-24)
 ------------------
 
