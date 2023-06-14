@@ -15,18 +15,21 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecution;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
+import org.codehaus.plexus.interpolation.ObjectBasedValueSource;
+import org.codehaus.plexus.interpolation.RegexBasedInterpolator;
 import org.codehaus.plexus.util.DirectoryScanner;
 import org.codehaus.plexus.util.StringUtils;
-import org.codehaus.plexus.util.interpolation.ObjectBasedValueSource;
-import org.codehaus.plexus.util.interpolation.RegexBasedInterpolator;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.sonatype.plexus.build.incremental.BuildContext;
 import org.zeroturnaround.javarebel.maven.model.RebelClasspath;
@@ -39,11 +42,8 @@ import org.zeroturnaround.javarebel.maven.util.SystemUtils;
 
 /**
  * Generate rebel.xml
- *
- * @goal generate
- * @phase process-resources
- * @threadSafe true
  */
+@Mojo(name = "generate", defaultPhase = LifecyclePhase.PROCESS_RESOURCES, threadSafe = true)
 @SuppressWarnings({"JavaDoc", "unused"})
 public class GenerateRebelMojo extends AbstractMojo {
 
@@ -61,162 +61,135 @@ public class GenerateRebelMojo extends AbstractMojo {
 
   /**
    * The maven project.
-   *
-   * @parameter expression="${project}"
-   * @required
-   * @readonly
    */
+  @Parameter(property = "project", required = true, readonly = true)
   private MavenProject project;
 
   /**
    * Packaging of project.
-   *
-   * @parameter expression="${project.packaging}"
-   * @required
    */
+  @Parameter(property = "project.packaging", required = true)
   private String packaging;
 
   /**
    * The directory containing generated classes.
-   *
-   * @parameter expression="${project.build.outputDirectory}"
-   * @required
    */
+  @Parameter(property = "project.build.outputDirectory", required = true)
   private File classesDirectory;
 
   /**
    * Root directory for all html/jsp etc files.
-   *
-   * @parameter expression="${basedir}/src/main/webapp"
-   * @required
    */
+  @Parameter(defaultValue = "${basedir}/src/main/webapp", required = true)
   private File warSourceDirectory;
 
   /**
    * The directory where the webapp is built.
-   *
-   * @parameter expression="${project.build.directory}/${project.build.finalName}"
-   * @required
    */
+  @Parameter(defaultValue = "${project.build.directory}/${project.build.finalName}", required = true)
   private File webappDirectory;
 
   /**
    * Rebel classpath configuration.
-   *
-   * @parameter
    */
+  @Parameter
   private RebelClasspath classpath;
 
   /**
    * Rebel war configuration.
-   *
-   * @parameter
    */
+  @Parameter
   private RebelWar war;
 
   /**
    * Rebel web configuration.
-   *
-   * @parameter
    */
+  @Parameter
   private RebelWeb web;
 
   /**
    * Root path of maven projects.
-   *
-   * @parameter
    */
+  @Parameter
   private String rootPath;
 
   /**
    * Relative path to root of current project.
-   *
-   * @parameter
    */
+  @Parameter
   private String relativePath;
 
   /**
    * Root relative path.
-   *
-   * @parameter
    */
+  @Parameter
   private String rootRelativePath;
 
   /**
    * Target directory for generated rebel.xml and rebel-remote.xml files.
-   *
-   * @parameter expression="${rebel.xml.dir}" default-value="${project.build.outputDirectory}"
-   * @required
    */
+  @Parameter(property = "rebel.xml.dir", defaultValue = "${project.build.outputDirectory}", required = true)
   private File rebelXmlDirectory;
 
   /**
    * If set to true rebel plugin will write generated xml at info level.
-   *
-   * @parameter expression="${rebel.generate.show}" default-value="false"
    */
+  @Parameter(property = "rebel.generate.show", defaultValue = "false")
   private boolean showGenerated;
 
   /**
    * If set to true rebel plugin will add resources directories to rebel.xml classpath.
-   *
-   * @parameter default-value="false"
    */
+  @Parameter(defaultValue = "false")
   private boolean addResourcesDirToRebelXml;
 
   /**
    * If set to true rebel plugin will generate rebel.xml and rebel-remote.xml (if 'generateRebelRemote' is set) on each build.
    * Otherwise the timestamps of rebel.xml and pom.xml are compared. The rebel-remote.xml would then be generated nevertheless.
-   *
-   * @parameter default-value="false"
    */
+  @Parameter(defaultValue = "false")
   private boolean alwaysGenerate;
 
   /**
    * Indicates whether the default web element will be generated or not. This parameter has effect only when {@link #generateDefaultElements} is <code>true</code>.
-   *
-   * @parameter default-value="true"
    */
+  @Parameter(defaultValue = "true")
   private boolean generateDefaultWeb;
 
   /**
    * Indicates whether the default classpath element will be generated or not. This parameter has effect only when {@link #generateDefaultElements} is <code>true</code>.
-   *
-   * @parameter default-value="true"
    */
+  @Parameter(defaultValue = "true")
   private boolean generateDefaultClasspath;
 
   /**
    * If set to false rebel plugin will not generate default elements in rebel.xml.
-   *
-   * @parameter default-value="true"
    */
+  @Parameter(defaultValue = "true")
   private boolean generateDefaultElements;
 
   /**
    * Indicates whether the rebel-remote.xml file will be generated or not.
-   *
-   * @parameter default-value="false"
    */
+  @Parameter(defaultValue = "false")
   private boolean generateRebelRemote;
 
   /**
    * If set to true rebel plugin execution will be skipped.
-   *
-   * @parameter default-value="false"
    */
+  @Parameter(defaultValue = "false")
   private boolean skip;
 
-  /** @component */
+  @Component
   private BuildContext buildContext;
 
-  /** @parameter default-value="${mojoExecution}" */
+  @Parameter(defaultValue = "${mojoExecution}")
   private MojoExecution execution;
 
-  /** @parameter default-value="${session}" */
+  @Parameter(defaultValue = "${session}")
   private MavenSession session;
 
-  /** @parameter default-value="${project.build.directory}" */
+  @Parameter(defaultValue = "${project.build.directory}")
   private String projectBuildDir;
 
 
@@ -294,10 +267,8 @@ public class GenerateRebelMojo extends AbstractMojo {
     }
 
     if (builder != null) {
-      Writer w = null;
       if (this.showGenerated) {
-        try {
-          w = new StringWriter();
+        try (Writer w = new StringWriter()) {
           builder.writeXml(w);
           getLog().info(w.toString());
         }
@@ -308,14 +279,14 @@ public class GenerateRebelMojo extends AbstractMojo {
 
       try {
         rebelXmlDirectory.mkdirs();
-        w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(rebelXmlFile), CHARTSET_UTF8));
-        builder.writeXml(w);
+        try (Writer w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(rebelXmlFile), CHARTSET_UTF8))) {
+          builder.writeXml(w);
+        }
       }
       catch (IOException e) {
         throw new MojoExecutionException("Failed writing rebel.xml", e);
       }
       finally {
-        IOUtils.closeQuietly(w);
         if (this.buildContext != null) {
           // safeguard for null buildContext. Can it be null, actually? E.g when field is not injected.
           this.buildContext.refresh(rebelXmlFile);
@@ -331,25 +302,26 @@ public class GenerateRebelMojo extends AbstractMojo {
   private void generateRebelRemoteXmlFile(File rebelRemoteXmlFile) throws MojoExecutionException {
     getLog().info("Generating rebel-remote.xml on : " + rebelRemoteXmlFile.getAbsolutePath());
 
-    Writer w = null;
     if (this.showGenerated) {
-      try {
-        w = new StringWriter();
+      try (Writer w = new StringWriter()) {
         generateRebelRemoteXml(w);
         getLog().info(w.toString());
-      } catch (IOException e) {
+      }
+      catch (IOException e) {
         getLog().debug("Detected exception during 'showGenerated' : ", e);
       }
     }
 
     try {
       rebelXmlDirectory.mkdirs();
-      w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(rebelRemoteXmlFile), CHARTSET_UTF8));
-      generateRebelRemoteXml(w);
-    } catch (IOException e) {
+      try (Writer w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(rebelRemoteXmlFile), CHARTSET_UTF8))) {
+        generateRebelRemoteXml(w);
+      }
+    }
+    catch (IOException e) {
       throw new MojoExecutionException("Failed writing rebel-remote.xml", e);
-    } finally {
-      IOUtils.closeQuietly(w);
+    }
+    finally {
       if (this.buildContext != null) {
         this.buildContext.refresh(rebelRemoteXmlFile);
       }
