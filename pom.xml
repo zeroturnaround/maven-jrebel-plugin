@@ -37,24 +37,9 @@
 
   <developers>
     <developer>
-      <id>AA</id>
-      <name>Anton Arhipov</name>
-      <email>anton@jrebel.com</email>
-    </developer>
-    <developer>
-      <id>LT</id>
-      <name>Lauri Tulmin</name>
-      <email>lauri@jrebel.com</email>
-    </developer>
-    <developer>
-      <id>SL</id>
-      <name>Sven Laanela</name>
-      <email>sven.laanela@zeroturnaround.com</email>
-    </developer>
-    <developer>
-      <id>SH</id>
-      <name>Silver Holmar</name>
-      <email>silver.holmar@zeroturnaround.com</email>
+      <id>jrebel_support</id>
+      <name>JRebel Support</name>
+      <email>support@jrebel.com</email>
     </developer>
   </developers>
 
