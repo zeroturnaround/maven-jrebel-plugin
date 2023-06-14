@@ -11,9 +11,9 @@
     <maven>3.1.0</maven>
   </prerequisites>
 
-  <name>ZeroTurnaround JRebel Maven plugin</name>
-  <description>ZeroTurnaround JRebel Maven plugin</description>
-  <url>http://www.zeroturnaround.com/jrebel</url>
+  <name>JRebel Maven plugin</name>
+  <description>JRebel Maven plugin</description>
+  <url>https://www.jrebel.com/products/jrebel</url>
 
   <licenses>
     <license>
