@@ -1,6 +1,12 @@
 JRebel Maven Plugin changelog
 =============================
 
+1.2.0 (2023-05-16)
+------------------
+
+* Improvement: resolved plugin validation issues with Maven 3.9.2.
+* Improvement: increased Maven baseline to 3.2.5.
+
 1.1.11 (2023-04-18)
 ------------------
 
