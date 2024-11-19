@@ -1,6 +1,11 @@
 JRebel Maven Plugin changelog
 =============================
 
+1.2.1 (2024-11-12)
+------------------
+
+* Improvement: bumped commons-io and commons-lang dependencies
+
 1.2.0 (2023-05-16)
 ------------------
 
