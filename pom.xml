@@ -68,9 +68,20 @@
             </executions>
           </plugin>
           <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-release-plugin</artifactId>
-            <version>2.5.3</version>
+            <!-- Publishes the release to the Central Publisher Portal as a SINGLE bundle (one request,
+                 one deployment) - avoids the OSSRH Staging API's per-IP repository splitting that
+                 breaks CI deploys from nodes with multiple egress IPs. Credentials come from the
+                 existing "sonatype-nexus-staging" server (the proven Sonatype token) in settings.xml.
+                 autoPublish=false uploads a pending deployment that you review and Publish with one
+                 click in the Portal UI; set true for fully automated release once trusted. -->
+            <groupId>org.sonatype.central</groupId>
+            <artifactId>central-publishing-maven-plugin</artifactId>
+            <version>0.9.0</version>
+            <extensions>true</extensions>
+            <configuration>
+              <publishingServerId>sonatype-nexus-staging</publishingServerId>
+              <autoPublish>false</autoPublish>
+            </configuration>
           </plugin>
         </plugins>
       </build>
@@ -201,9 +212,9 @@
       <version>2.17.0</version>
     </dependency>
     <dependency>
-      <groupId>commons-lang</groupId>
-      <artifactId>commons-lang</artifactId>
-      <version>2.6</version>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>3.20.0</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -214,17 +225,20 @@
   </dependencies>
 
   <distributionManagement>
-    <repository>
-      <id>sonatype-nexus-staging</id>
-      <name>Sonatype OSS Staging</name>
-      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
-      <layout>default</layout>
-    </repository>
+    <!-- Sonatype OSSRH (oss.sonatype.org) was shut down 2025-06-30.
+          Releases are published to the Central Publisher Portal by the central-publishing-maven-plugin
+          (see the "release" profile), which uploads all artifacts as a SINGLE bundle in one request.
+          This deliberately avoids the raw OSSRH Staging API deploy: that API isolates staging repos by
+          source IP, so a CI node with multiple NAT egress IPs splits artifacts across incomplete repos
+          that cannot be merged. No release <repository> is needed here - the plugin handles it.
+          Snapshots -> internal zt-public-snapshots, NOT Maven Central: SNAPSHOT publishing is not
+          enabled for the org.zeroturnaround namespace on the Central Portal (see gradle-jrebel-plugin,
+          which routes snapshots the same way). Installer snapshots are dev-only; only releases are
+          portal-facing. Server id zt-public-snapshots already exists in the node's settings.xml. -->
     <snapshotRepository>
-      <id>sonatype-nexus-snapshots</id>
-      <name>Sonatype OSS Snapshots</name>
-      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-      <layout>default</layout>
+      <id>zt-public-snapshots</id>
+      <name>ZeroTurnaround Public Snapshots</name>
+      <url>https://repos.zeroturnaround.com/nexus/content/repositories/zt-public-snapshots/</url>
     </snapshotRepository>
   </distributionManagement>
 </project>

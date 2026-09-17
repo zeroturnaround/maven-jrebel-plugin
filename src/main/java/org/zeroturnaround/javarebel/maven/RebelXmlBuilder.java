@@ -1,13 +1,13 @@
 package org.zeroturnaround.javarebel.maven;
 
-import static org.apache.commons.lang.StringEscapeUtils.escapeXml;
+import static org.apache.commons.lang3.StringEscapeUtils.escapeXml;
 
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugin.logging.SystemStreamLog;
 import org.zeroturnaround.javarebel.maven.model.RebelClasspathResource;
