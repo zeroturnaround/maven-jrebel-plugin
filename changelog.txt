@@ -1,6 +1,12 @@
 JRebel Maven Plugin changelog
 =============================
 
+1.2.2 (2026-09-18)
+------------------
+
+* Improvement: bumped commons-lang dependency to commons-lang3 3.2.0
+* Improvement: use central-publishing-maven-plugin for release publishing to Maven Central
+
 1.2.1 (2024-11-12)
 ------------------
 
